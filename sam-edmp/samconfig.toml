@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "edmp"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-2a2wumw7779e"
+s3_prefix = "edmp"
+region = "eu-central-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "TableNameOffers=\"trade_offers\" TableNameOfferItems=\"offer_items\""

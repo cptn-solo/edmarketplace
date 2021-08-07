@@ -1,0 +1,271 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+# The AWSTemplateFormatVersion identifies the capabilities of the template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  sam-edmp
+
+# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
+Transform:
+- AWS::Serverless-2016-10-31
+
+Parameters:
+  TableNameOffers:
+    Type: String
+    Default: 'offers'
+    Description: (Required) The name of the new DynamoDB to store trade offers. Minimum 3 characters
+    MinLength: 3
+    MaxLength: 50
+    AllowedPattern: ^[A-Za-z_]+$
+    ConstraintDescription: 'Required. Can be characters and underscore only. No numbers or special characters allowed.'
+  TableNameOfferItems:
+    Type: String
+    Default: 'offer_items'
+    Description: (Required) The name of the new DynamoDB to store offer items. Minimum 3 characters
+    MinLength: 3
+    MaxLength: 50
+    AllowedPattern: ^[A-Za-z_]+$
+    ConstraintDescription: 'Required. Can be characters and underscore only. No numbers or special characters allowed.'
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:
+  EDMarketplaceSocket:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: EDMarketplaceSocket
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref EDMarketplaceSocket
+      RouteKey: $connect
+      AuthorizationType: NONE
+      OperationName: ConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref ConnectInteg
+  ConnectInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref EDMarketplaceSocket
+      Description: Connect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub:
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnConnectFunction.Arn}/invocations
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref EDMarketplaceSocket
+      RouteKey: $disconnect
+      AuthorizationType: NONE
+      OperationName: DisconnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref DisconnectInteg
+  DisconnectInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref EDMarketplaceSocket
+      Description: Disconnect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub:
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnDisconnectFunction.Arn}/invocations
+  OfferRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref EDMarketplaceSocket
+      RouteKey: offer
+      AuthorizationType: NONE
+      OperationName: OfferRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref OfferInteg
+  OfferInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref EDMarketplaceSocket
+      Description: Offer Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub:
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PlaceOfferFunction.Arn}/invocations
+
+  # Deployment
+  Deployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+    - ConnectRoute
+    - OfferRoute
+    - DisconnectRoute
+    Properties:
+      ApiId: !Ref EDMarketplaceSocket
+  Stage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      StageName: Prod
+      Description: Prod Stage
+      DeploymentId: !Ref Deployment
+      ApiId: !Ref EDMarketplaceSocket
+
+  OffersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: "connectionId"
+        AttributeType: "S"
+      - AttributeName: "offerId"
+        AttributeType: "S"
+      KeySchema:
+      - AttributeName: "connectionId"
+        KeyType: "HASH"
+      - AttributeName: "offerId"
+        KeyType: "RANGE"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 50
+        WriteCapacityUnits: 50
+      SSESpecification:
+        SSEEnabled: True
+      TableName: !Ref TableNameOffers
+
+  OfferItemsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: "offerId"
+        AttributeType: "S"
+      - AttributeName: "itemId"
+        AttributeType: "S"
+      KeySchema:
+      - AttributeName: "offerId"
+        KeyType: "HASH"
+      - AttributeName: "itemId"
+        KeyType: "RANGE"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 50
+        WriteCapacityUnits: 50
+      SSESpecification:
+        SSEEnabled: True
+      TableName: !Ref TableNameOfferItems
+
+  # Function: OnDisconnect
+  OnConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/on-connect.onConnect
+      MemorySize: 256
+      Runtime: nodejs14.x
+      Timeout: 100
+      Description: A Lambda function that handles connection of a user.
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameOffers
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref TableNameOffers
+  OnConnectPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - EDMarketplaceSocket
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref OnConnectFunction
+      Principal: apigateway.amazonaws.com
+
+  # Function: OnDisconnect
+  OnDisconnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/on-disconnect.onDisconnect
+      MemorySize: 256
+      Runtime: nodejs14.x
+      Timeout: 100
+      Description: A Lambda function that handles disconnection of a user.
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameOffers
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref TableNameOffers
+  OnDisconnectPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - EDMarketplaceSocket
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref OnDisconnectFunction
+      Principal: apigateway.amazonaws.com
+
+  # Function: PlaceOffer
+  PlaceOfferFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/place-offer.placeOffer
+      MemorySize: 256
+      Runtime: nodejs14.x
+      Timeout: 100
+      Description: A Lambda function that places a trade offer on behalf of a connected user.
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableNameOffers
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref TableNameOffers
+      - Statement:
+        - Effect: Allow
+          Action:
+          - 'execute-api:ManageConnections'
+          Resource:
+          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${EDMarketplaceSocket}/*'
+  PlaceOfferPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - EDMarketplaceSocket
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PlaceOfferFunction
+      Principal: apigateway.amazonaws.com
+
+  # This is a Reference Lambda function config associated with the source code: hello-from-lambda.js
+  helloFromLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/hello-from-lambda.helloFromLambdaHandler
+      Runtime: nodejs14.x
+      MemorySize: 128
+      Timeout: 100
+      Description: A Lambda function that returns a static string.
+      Policies:
+        # Give Lambda basic execution Permission to the helloFromLambda
+        - AWSLambdaBasicExecutionRole
+
+Outputs:
+  OffersTableArn:
+    Description: "Offers Table ARN"
+    Value: !GetAtt OffersTable.Arn
+
+  OnConnectFunctionArn:
+    Description: "OnConnect function ARN"
+    Value: !GetAtt OnConnectFunction.Arn
+
+  OnDisconnectFunctionArn:
+    Description: "OnDisconnect function ARN"
+    Value: !GetAtt OnDisconnectFunction.Arn
+
+  PlaceOfferFunctionArn:
+    Description: "PlaceOffer function ARN"
+    Value: !GetAtt PlaceOfferFunction.Arn
+
+  WebSocketURI:
+    Description: "The WSS Protocol URI to connect to"
+    Value: !Join [ '', [ 'wss://', !Ref EDMarketplaceSocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'Stage'] ]
+

@@ -1,0 +1,11 @@
+{
+    "name": "replaced-by-user-input",
+    "description": "replaced-by-user-input",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {},
+    "devDependencies": {
+        "aws-sdk": "^2.739.0"
+    },
+    "scripts": {}
+}
