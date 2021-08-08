@@ -117,6 +117,9 @@ Resources:
       DeploymentId: !Ref Deployment
       ApiId: !Ref EDMarketplaceSocket
 
+  # Tables
+
+  # Offers table
   OffersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -137,6 +140,7 @@ Resources:
         SSEEnabled: True
       TableName: !Ref TableNameOffers
 
+  # Offer Items table
   OfferItemsTable:
     Type: AWS::DynamoDB::Table
     Properties:
