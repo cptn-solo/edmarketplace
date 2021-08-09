@@ -1,0 +1,19 @@
+<!-- Toolbar -->
+<mat-toolbar>
+    <span>{{title}}</span>
+    <span class="toolbar-spacer"></span>
+
+    <button mat-raised-button color="accent"
+        *ngIf="!connected"
+        [disabled]="connectdisabled"
+        (click)="connect()">
+        Connect
+    </button>
+    <button mat-raised-button color="warn"
+        *ngIf="connected"
+        [disabled]="disconnectdisabled"
+        (click)="disconnect()">
+        Disconnect
+    </button>
+</mat-toolbar>
+<app-myoffer></app-myoffer>
