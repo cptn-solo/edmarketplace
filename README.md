@@ -7,4 +7,4 @@ A marketplace for Elite Dangerous engineering materials and goods
 
 /specs - Some diagrams and docs to keep a picture of what's going on
 
-Reference UI Deployed to github pages https://kkrupovich.github.io/edmarketplace/
+Reference UI Deployed to github pages https://cptn-solo.github.io/edmarketplace/
