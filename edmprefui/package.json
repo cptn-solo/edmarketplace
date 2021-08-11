@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "startssl": "ng serve --port 4233 --ssl --ssl-key ~/dev/ssl/localhost.key  --ssl-cert ~/dev/ssl/localhost.crt",
     "build": "ng build",
     "deploy": "ng deploy --base-href=/edmarketplace/",
     "watch": "ng build --watch --configuration development",
