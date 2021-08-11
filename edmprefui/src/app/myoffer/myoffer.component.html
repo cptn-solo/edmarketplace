@@ -1,9 +1,14 @@
 <mat-toolbar>
+    <button mat-raised-button
+        *ngIf="connected"
+        (click)="getoffers()">
+        Reload
+    </button>
     <span class="toolbar-spacer"></span>
     <button mat-raised-button color="primary"
         *ngIf="connected"
-        (click)="message()">
-        Message
+        (click)="offer()">
+        Offer
     </button>
 </mat-toolbar>
 <app-tradeitemslist></app-tradeitemslist>

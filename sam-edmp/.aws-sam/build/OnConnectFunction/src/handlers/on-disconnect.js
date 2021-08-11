@@ -1,12 +1,20 @@
-/**
- * A Lambda function that returns a static string
- */
-exports.onDisconnect = async () => {
-    // If you change this message, you will need to change hello-from-lambda.test.js
-    const message = 'Hello from Lambda!';
+const AWS = require('aws-sdk');
 
-    // All log statements are written to CloudWatch
-    console.info(`${message}`);
+const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: process.env.AWS_REGION });
 
-    return message;
-}
+exports.onDisconnect = async event => {
+    const deleteParams = {
+        TableName: process.env.TABLE_NAME,
+        Key: {
+        connectionId: event.requestContext.connectionId
+        }
+    };
+
+    try {
+        await ddb.delete(deleteParams).promise();
+    } catch (err) {
+        return { statusCode: 500, body: 'Failed to disconnect: ' + JSON.stringify(err) };
+    }
+
+    return { statusCode: 200, body: 'Disconnected.' };
+};

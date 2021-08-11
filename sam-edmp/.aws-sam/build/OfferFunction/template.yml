@@ -13,18 +13,10 @@ Transform:
 - AWS::Serverless-2016-10-31
 
 Parameters:
-  TableNameOffers:
+  TableName:
     Type: String
-    Default: 'offers'
-    Description: (Required) The name of the new DynamoDB to store trade offers. Minimum 3 characters
-    MinLength: 3
-    MaxLength: 50
-    AllowedPattern: ^[A-Za-z_]+$
-    ConstraintDescription: 'Required. Can be characters and underscore only. No numbers or special characters allowed.'
-  TableNameOfferItems:
-    Type: String
-    Default: 'offer_items'
-    Description: (Required) The name of the new DynamoDB to store offer items. Minimum 3 characters
+    Default: 'connections'
+    Description: (Required) The name of the new DynamoDB to store trade information. Minimum 3 characters
     MinLength: 3
     MaxLength: 50
     AllowedPattern: ^[A-Za-z_]+$
@@ -98,7 +90,7 @@ Resources:
       IntegrationType: AWS_PROXY
       IntegrationUri:
         Fn::Sub:
-            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PlaceOfferFunction.Arn}/invocations
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OfferFunction.Arn}/invocations
 
   # Deployment
   Deployment:
@@ -117,47 +109,26 @@ Resources:
       DeploymentId: !Ref Deployment
       ApiId: !Ref EDMarketplaceSocket
 
-  OffersTable:
+  # Tables
+
+  # Connections table
+  ConnectionsTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
       - AttributeName: "connectionId"
         AttributeType: "S"
-      - AttributeName: "offerId"
-        AttributeType: "S"
       KeySchema:
       - AttributeName: "connectionId"
         KeyType: "HASH"
-      - AttributeName: "offerId"
-        KeyType: "RANGE"
       ProvisionedThroughput:
-        ReadCapacityUnits: 50
-        WriteCapacityUnits: 50
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
       SSESpecification:
         SSEEnabled: True
-      TableName: !Ref TableNameOffers
+      TableName: !Ref TableName
 
-  OfferItemsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      AttributeDefinitions:
-      - AttributeName: "offerId"
-        AttributeType: "S"
-      - AttributeName: "itemId"
-        AttributeType: "S"
-      KeySchema:
-      - AttributeName: "offerId"
-        KeyType: "HASH"
-      - AttributeName: "itemId"
-        KeyType: "RANGE"
-      ProvisionedThroughput:
-        ReadCapacityUnits: 50
-        WriteCapacityUnits: 50
-      SSESpecification:
-        SSEEnabled: True
-      TableName: !Ref TableNameOfferItems
-
-  # Function: OnDisconnect
+  # Function: OnConnect
   OnConnectFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -168,10 +139,10 @@ Resources:
       Description: A Lambda function that handles connection of a user.
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableNameOffers
+          TABLE_NAME: !Ref TableName
       Policies:
       - DynamoDBCrudPolicy:
-          TableName: !Ref TableNameOffers
+          TableName: !Ref TableName
   OnConnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -192,10 +163,10 @@ Resources:
       Description: A Lambda function that handles disconnection of a user.
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableNameOffers
+          TABLE_NAME: !Ref TableName
       Policies:
       - DynamoDBCrudPolicy:
-          TableName: !Ref TableNameOffers
+          TableName: !Ref TableName
   OnDisconnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -205,34 +176,34 @@ Resources:
       FunctionName: !Ref OnDisconnectFunction
       Principal: apigateway.amazonaws.com
 
-  # Function: PlaceOffer
-  PlaceOfferFunction:
+  # Function: Offer
+  OfferFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/place-offer.placeOffer
+      Handler: src/handlers/offer.offer
       MemorySize: 256
       Runtime: nodejs14.x
       Timeout: 100
-      Description: A Lambda function that places a trade offer on behalf of a connected user.
+      Description: A Lambda function that process actions related to offers (publish, get list, remove).
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableNameOffers
+          TABLE_NAME: !Ref TableName
       Policies:
       - DynamoDBCrudPolicy:
-          TableName: !Ref TableNameOffers
+          TableName: !Ref TableName
       - Statement:
         - Effect: Allow
           Action:
           - 'execute-api:ManageConnections'
           Resource:
           - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${EDMarketplaceSocket}/*'
-  PlaceOfferPermission:
+  OfferPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - EDMarketplaceSocket
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref PlaceOfferFunction
+      FunctionName: !Ref OfferFunction
       Principal: apigateway.amazonaws.com
 
   # This is a Reference Lambda function config associated with the source code: hello-from-lambda.js
@@ -249,9 +220,9 @@ Resources:
         - AWSLambdaBasicExecutionRole
 
 Outputs:
-  OffersTableArn:
-    Description: "Offers Table ARN"
-    Value: !GetAtt OffersTable.Arn
+  ConnectionsTableArn:
+    Description: "Connections Table ARN"
+    Value: !GetAtt ConnectionsTable.Arn
 
   OnConnectFunctionArn:
     Description: "OnConnect function ARN"
@@ -261,9 +232,9 @@ Outputs:
     Description: "OnDisconnect function ARN"
     Value: !GetAtt OnDisconnectFunction.Arn
 
-  PlaceOfferFunctionArn:
-    Description: "PlaceOffer function ARN"
-    Value: !GetAtt PlaceOfferFunction.Arn
+  OfferFunctionArn:
+    Description: "Offer handler function ARN"
+    Value: !GetAtt OfferFunction.Arn
 
   WebSocketURI:
     Description: "The WSS Protocol URI to connect to"

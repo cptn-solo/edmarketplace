@@ -6,6 +6,6 @@ codeuri = "/Users/mark2/Documents/GitHub/edmarketplace/sam-edmp"
 runtime = "nodejs14.x"
 source_md5 = ""
 packagetype = "Zip"
-functions = ["OnConnectFunction", "OnDisconnectFunction", "PlaceOfferFunction", "helloFromLambdaFunction"]
+functions = ["OnConnectFunction", "OnDisconnectFunction", "OfferFunction", "helloFromLambdaFunction"]
 
 [layer_build_definitions]

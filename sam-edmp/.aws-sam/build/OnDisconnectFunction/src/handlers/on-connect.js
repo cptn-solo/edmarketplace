@@ -1,12 +1,22 @@
-/**
- * A Lambda function that returns a static string
- */
-exports.onConnect = async () => {
-    // If you change this message, you will need to change hello-from-lambda.test.js
-    const message = 'Hello from Lambda!';
+const AWS = require('aws-sdk');
 
+const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: process.env.AWS_REGION });
+
+exports.onConnect = async event => {
+    const putParams = {
+        TableName: process.env.TABLE_NAME,
+        Item: {
+            connectionId: event.requestContext.connectionId
+        }
+    };
+
+    try {
+        await ddb.put(putParams).promise();
+    } catch (err) {
+        return { statusCode: 500, body: 'Failed to connect: ' + JSON.stringify(err) };
+    }
     // All log statements are written to CloudWatch
-    console.info(`${message}`);
+    console.info('connectionId', event.requestContext.connectionId);
 
-    return message;
-}
+    return { statusCode: 200, body: 'Connected.' };
+};

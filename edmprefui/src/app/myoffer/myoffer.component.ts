@@ -28,8 +28,35 @@ export class MyofferComponent implements OnDestroy {
     this.ngUnsubscribe.complete();
   }
 
-  message() {
-    this.service.sendMessage({"action":"sendmessage", "data":"hi"});
+  getoffers() {
+    this.service.sendMessage(
+      { "action":"offer",
+        "data": {
+          "method": "getoffers"
+        }
+      }
+    );
+  }
+
+  offer() {
+    this.service.sendMessage(
+      { "action":"offer",
+        "data":
+          { "method":"publishoffer",
+            "payload": {
+              "system": "Sol",
+              "offer": [
+                { "material": "Item1",
+                  "demand": 5,
+                  "supply": 0},
+                { "material": "Item2",
+                  "demand": 0,
+                  "supply": 5}
+              ]
+            }
+          }
+      }
+    );
   }
 
   connectionMonitor(val: boolean) {
