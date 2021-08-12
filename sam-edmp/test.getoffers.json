@@ -1,0 +1,10 @@
+{
+    "requestContext": {
+      "domainName": "ar5lb07pu9.execute-api.eu-central-1.amazonaws.com",
+      "stage": "Prod",
+      "connectionId": "D7LFmcYrliACFvQ=",
+      "data": {
+        "method": "getoffers"
+      }
+    }
+  }

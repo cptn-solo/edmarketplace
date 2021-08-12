@@ -5,6 +5,7 @@ const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: 
 const { TABLE_NAME } = process.env;
 const OFFER_METHOD_PUBLISH = "publishoffer";
 const OFFER_METHOD_GET = "getoffers";
+const OFFER_METHOD_READ = "readoffers"; // debug only, remove later
 const OFFER_METHOD_REMOVE = "removeoffer";
 
 exports.offer = async event => {
@@ -16,25 +17,33 @@ exports.offer = async event => {
     // get current connections for further operations:
 
     try {
+        console.log('request body: ' + event.body);
+        const eventBody = JSON.parse(event.body);
+
         // switch method being called
-        switch (event.requestContext.data.method) {
+        switch (eventBody.data.method) {
             case OFFER_METHOD_PUBLISH:
                 // 1. store new/updated offer data
-                const partyOffer = await publishOffer(event.requestContext.connectionId, event.requestContext.data.payload);
+                const partyOffer = await publishOffer(event.requestContext.connectionId, eventBody.data.payload);
                 // 2. broadcast this offer to all connected users
                 await postOfferToAllConnections(apigwManagementApi, partyOffer);
                 return { statusCode: 200, body: { connectionid: event.requestContext.connectionId }};
             case OFFER_METHOD_GET:
-                await postAllOffersToConnection(apigwManagementApi, event.requestContext.connectionId);
-                return { statusCode: 200, body: {}};
+                const offers = await postAllOffersToConnection(apigwManagementApi, event.requestContext.connectionId);
+                return { statusCode: 200, body: { offers }};
             case OFFER_METHOD_REMOVE:
                 await deleteOffer(apigwManagementApi, event.requestContext.connectionId, true); // notify all users
                 return { statusCode: 200, body: {}};
+            case OFFER_METHOD_READ:
+                const connections = await ddb.scan({ TableName: TABLE_NAME }).promise();
+                const message = JSON.stringify(connections);
+                console.log('connections: ' + message);
+                return { statusCode: 200, body: message };
             default:
-                return { statusCode: 500, body: event.requestContext.data.method + ' method not supported' };
+                return { statusCode: 500, body: eventBody.data.method + ' method not supported' };
         }
     } catch (e) {
-        return { statusCode: 500, body: event.requestContext.data.method + ' failed: ' + JSON.stringify(e) };
+        return { statusCode: 500, body: 'failed request body: ' + event.body + ' : ' + JSON.stringify(e) };
     }
 };
 
@@ -65,10 +74,12 @@ async function postAllOffersToConnection(apigwManagementApi, connectionId) {
     // 2.2. if stale - drop offer
     // 2.3. if ok - post an offer to the requestor (message per offer)
 
-    let connections = await ddb.scan({ TableName: TABLE_NAME }).promise();
-    await broadcastPostCalls(connections.Items.filter(c => !!c.offer).map(async (partyOffer) => {
+    const connections = await ddb.scan({ TableName: TABLE_NAME }).promise();
+    const offers = connections.Items.filter(c => !!c.offer);
+    await broadcastPostCalls(offers.map(async (partyOffer) => {
         await postOfferToConnection(apigwManagementApi, connectionId, partyOffer);
     }));
+    return offers;
 }
 
 async function postOfferToConnection(apigwManagementApi, connectionId, partyOffer) {
