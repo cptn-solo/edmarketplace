@@ -1,25 +1,8 @@
 {
-    "requestContext": {
-      "connectionId": "D7LFmcYrliACFvQ=",
-      "domainName": "ar5lb07pu9.execute-api.eu-central-1.amazonaws.com",
-      "stage": "Prod",
-      "data": {
-        "method": "publishoffer",
-        "payload": {
-          "system": "Sol",
-          "offer": [
-            {
-              "material": "Item1",
-              "demand": 5,
-              "supply": 0
-            },
-            {
-              "material": "Item2",
-              "demand": 0,
-              "supply": 5
-            }
-          ]
-        }
-      }
-    }
-  }
+  "requestContext": {
+    "connectionId": "D7LFmcYrliACFvQ=",
+    "domainName": "fz7xmhknw5.execute-api.eu-central-1.amazonaws.com",
+    "stage": "Prod"
+  },
+  "body": "{\"data\":{\"method\":\"publishoffer\",\"payload\":{\"system\":\"Sol\",\"offer\":[{\"material\":\"Item1\",\"demand\":5,\"supply\":0},{\"material\":\"Item2\",\"demand\":0,\"supply\":5}]}}}"
+}

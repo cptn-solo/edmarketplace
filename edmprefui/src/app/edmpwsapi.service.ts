@@ -63,6 +63,7 @@ export class EdmpwsapiService {
       closeObserver: {
         next: () => {
           this.connected$.next(false);
+          this.socket$.closed = true;
           console.log('[DataService]: connection closed');
         }
       },
