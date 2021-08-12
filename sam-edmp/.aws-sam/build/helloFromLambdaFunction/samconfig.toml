@@ -2,10 +2,10 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "edmp3"
+stack_name = "edmp4"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-2a2wumw7779e"
-s3_prefix = "edmp3"
+s3_prefix = "edmp4"
 region = "eu-central-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "TableName=\"connns\""
+parameter_overrides = "TableName=\"connnns\""

@@ -1,4 +1,5 @@
 const AWS = require('aws-sdk');
+const shared = require('../shared/shared.js');
 
 const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: process.env.AWS_REGION });
 
@@ -32,7 +33,7 @@ exports.offer = async event => {
                 const offers = await postAllOffersToConnection(apigwManagementApi, event.requestContext.connectionId);
                 return { statusCode: 200, body: JSON.stringify({ offers })};
             case OFFER_METHOD_REMOVE:
-                await deleteOffer(apigwManagementApi, event.requestContext.connectionId, true); // notify all users
+                await shared.deleteOffer(apigwManagementApi, event.requestContext.connectionId, true); // notify all users
                 return { statusCode: 200, body: JSON.stringify({})};
             case OFFER_METHOD_READ:
                 const connections = await ddb.scan({ TableName: TABLE_NAME }).promise();
@@ -48,32 +49,12 @@ exports.offer = async event => {
     }
 };
 
-/** utilities */
-
-async function getCurrentConnectionIds() {
-    try {
-        return await ddb.scan({ TableName: TABLE_NAME, ProjectionExpression: 'connectionId' }).promise();
-    } catch (e) {
-        console.log('getCurrentConnectionIds: ' + JSON.stringify(e));
-        throw e;
-    }
-}
-
-async function broadcastPostCalls(postCalls) {
-    try {
-        await Promise.all(postCalls);
-    } catch (e) {
-        console.log('broadcastPostCalls: ' + JSON.stringify(e));
-        throw e;
-    }
-}
-
 /** method handlers*/
 
 async function postAllOffersToConnection(apigwManagementApi, connectionId) {
     const connections = await ddb.scan({ TableName: TABLE_NAME }).promise();
     const offers = connections.Items.filter(c => !!c.offer);
-    await broadcastPostCalls(offers.map(async (partyOffer) => {
+    await shared.broadcastPostCalls(offers.map(async (partyOffer) => {
         await postOfferToConnection(apigwManagementApi, connectionId, partyOffer);
     }));
     return offers;
@@ -85,10 +66,10 @@ async function postOfferToConnection(apigwManagementApi, connectionId, partyOffe
     } catch (e) {
         if (e.statusCode === 410) {
             console.log(`Found stale connection, deleting ${connectionId}`);
-            await deleteOffer(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
+            await shared.deleteOffer(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
         } else if (e.statusCode === 400) {
             console.log(`Found invalid connection, deleting ${connectionId}`);
-            await deleteOffer(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
+            await shared.deleteOffer(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
         } else {
             console.log('postOfferToConnection: ' + JSON.stringify(e));
             throw e;
@@ -97,31 +78,10 @@ async function postOfferToConnection(apigwManagementApi, connectionId, partyOffe
 }
 
 async function postOfferToAllConnections(apigwManagementApi, partyOffer) {
-    const connections = await getCurrentConnectionIds();
-    await broadcastPostCalls(connections.Items.map(async ({ connectionId }) => {
+    const connections = await shared.getCurrentConnectionIds();
+    await shared.broadcastPostCalls(connections.Items.map(async ({ connectionId }) => {
         await postOfferToConnection(apigwManagementApi, connectionId, partyOffer);
     }));
-}
-
-async function postOfferDeleteToAllConnections(apigwManagementApi, deletedConnectionId) {
-    // only stale connection id can be broadcasted in this case
-    const connections = await getCurrentConnectionIds();
-    await broadcastPostCalls(connections.Items.map(async ({ connectionId }) => {
-        const paiload = { dropoffer: deletedConnectionId };
-        await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(paiload) }).promise();
-    }));
-}
-
-async function deleteOffer(apigwManagementApi, connectionId, notify) {
-    try {
-        await ddb.delete({ TableName: TABLE_NAME, Key: { connectionId } }).promise();
-        if (notify) {
-            await postOfferDeleteToAllConnections(apigwManagementApi, connectionId);
-        }
-    } catch (e) {
-        console.log('deleteOffer: ' + JSON.stringify(e));
-        // skipping this ex
-    }
 }
 
 async function publishOffer(connectionId, offerData) {

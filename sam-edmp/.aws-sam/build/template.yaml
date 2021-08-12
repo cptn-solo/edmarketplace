@@ -162,6 +162,12 @@ Resources:
       - DynamoDBCrudPolicy:
           TableName:
             Ref: TableName
+      - Statement:
+        - Effect: Allow
+          Action:
+          - execute-api:ManageConnections
+          Resource:
+          - Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${EDMarketplaceSocket}/*
       CodeUri: OnDisconnectFunction
   OnDisconnectPermission:
     Type: AWS::Lambda::Permission
