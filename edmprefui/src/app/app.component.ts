@@ -9,7 +9,7 @@ import { EdmpwsapiService } from './edmpwsapi.service';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnDestroy, OnInit {
-  title = 'ED Market Place Reference UI';
+  title = 'ED Market Place';
   connected: boolean = false;
   connectdisabled: boolean = true;
   disconnectdisabled: boolean = true;
