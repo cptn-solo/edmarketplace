@@ -34,10 +34,7 @@ export class EdmpwsapiService {
         }
       ));
       this.messagesSubject$.next(messages);
-
-      // this subscription is a hack to prevent socket$ from being disposed :/ no idea why this happens:
-      // TODO: unsubscribe on socket change as this variable is replaced in that case
-      messages.subscribe();
+      // MUST subscribe from the app component to prevent pipe from being released
     }
   }
 

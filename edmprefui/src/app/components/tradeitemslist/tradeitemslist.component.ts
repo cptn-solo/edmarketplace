@@ -3,6 +3,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { Subject } from 'rxjs/internal/Subject';
 import { takeUntil } from 'rxjs/operators';
+import { DEFAULT_USER_INFO, UserInfo } from 'src/app/datamodels/userinfo';
 import { OfferService } from 'src/app/services/offer.service';
 import { TradeItem } from '../../datamodels/tradeitem';
 
@@ -14,10 +15,13 @@ import { TradeItem } from '../../datamodels/tradeitem';
 export class TradeitemslistComponent implements OnInit {
 
   @ViewChild(MatSort, { static: true }) sort!: MatSort;
-  @Input() connected: boolean = false;
 
   private ngUnsubscribe = new Subject();
+
   dataSource = new MatTableDataSource<TradeItem>([])
+
+  userinfo: UserInfo = DEFAULT_USER_INFO;
+
   addeditem = {
     id: "",
     name: "",
@@ -31,7 +35,13 @@ export class TradeitemslistComponent implements OnInit {
   constructor(private offers: OfferService) {
     this.offers.items$
       .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(val => this.dataSetter(val??[]));
+      .subscribe(val => this.dataSetter(val));
+    this.offers.userInfo$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(val => this.userinfo = val);
+}
+  updateinfo() {
+    this.offers.updateUserInfo(this.userinfo);
   }
 
   add() {
@@ -40,12 +50,20 @@ export class TradeitemslistComponent implements OnInit {
 
   change(field: string, increment: number, element: TradeItem) {
     switch (field) {
-      case 'supply':
-        element.supply+=increment;
+      case 'supply': {
+        if (0 < element.supply + increment && element.supply + increment < 1000) {
+          element.supply+=increment;
+          element.demand = 0;
+        }
         break;
-      default:
-        element.demand+=increment;
+      }
+      default: {
+        if (0 < element.demand + increment && element.demand + increment < 1000) {
+          element.demand+=increment;
+          element.supply = 0;
+        }
         break;
+      }
     }
     this.offers.updateItem(element);
   }

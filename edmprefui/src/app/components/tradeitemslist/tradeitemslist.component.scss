@@ -1,6 +1,38 @@
 table {
     width: 100%;
 }
+div.offer-info {
+    .mat-form-field {
+        min-width: 300px;
+        // display: flex;
+        @media screen and (max-width: 600px) {
+            width: 100%;
+            display: block;
+        }
+        &.contact-info {
+            min-width: 300px;
+            display: block;
+        }
+    }
+}
+div.added-item {
+    .item-name {
+        min-width: 350px;
+    }
+    .item-code {
+        min-width: 250px;
+    }
+    .item-name, .item-code {
+        @media screen and (max-width: 600px) {
+            width: 100%;
+            display: block;
+        }
+    }
+
+    .item-stock {
+        width: 100px;
+    }
+}
 .mat-form-field {
     margin-right: 8px;
 }
@@ -10,5 +42,8 @@ table {
 .mat-column-stock, .mat-column-demand, .mat-column-supply {
     width: 120px;
     text-align: center;
+    b {
+        font-size: 20px;
+    }
 }
 

@@ -11,9 +11,11 @@ import { StateService } from './state.service';
 export class OfferService {
   _userinfo$ = new BehaviorSubject<UserInfo>(DEFAULT_USER_INFO);
   _items$ = new BehaviorSubject<Array<TradeItem>>([]);
+  _offers$ = new BehaviorSubject<Array<UserInfo>>([]);
 
   userInfo$ = this._userinfo$.asObservable();
   items$ = this._items$.asObservable();
+  offers$ = this._offers$.asObservable();
 
   constructor(
     private api: EdmpwsapiService,
@@ -22,11 +24,13 @@ export class OfferService {
       this._items$.next(info.items as Array<TradeItem>);
       this._userinfo$.next(info);
     });
+    this.state.offers$.subscribe(offers => {
+      this._offers$.next(offers);
+    });
     this.api.connected$
       .subscribe(val => this.connectionMonitor(val));
     this.api.messages$
       .subscribe(data => this.messagesMonitor(data));
-
   }
 
   connectionMonitor(connected: boolean){
@@ -53,10 +57,15 @@ export class OfferService {
         var userInfo = this._userinfo$.value;
         userInfo.connectionid = jsonData.myoffer.connectionId;
         this.state.updateUserInfo(userInfo);
+        if (userInfo.published) {
+          this.publishoffer();
+        }
       } else if (jsonData.offer !== undefined) {
         // incoming offer, should be processed to get matches and other usefull info
+        this.state.processInboundOffer(jsonData.offer);
       } else if (jsonData.dropoffer !== undefined) {
         // some offer was dropped notification, should be processed to update offers
+        this.state.processOfferRemove(jsonData.dropoffer);
       } else {
         console.log(`messagesMonitor: ${data}`);
       }
@@ -79,6 +88,16 @@ export class OfferService {
     userInfo.changed = changed;
     this.state.updateUserInfo(userInfo);
   }
+
+  updateUserInfo(updatedInfo: UserInfo) {
+    var userInfo = this._userinfo$.value;
+    userInfo.location = updatedInfo.location;
+    userInfo.nickname = updatedInfo.nickname;
+    userInfo.contactinfo = updatedInfo.contactinfo;
+    this.state.updateUserInfo(userInfo);
+    this.updateChangedState(true);
+  }
+
 
   addItem(item: TradeItem) {
     var items = this._items$.value as unknown as Array<TradeItem>|null;
@@ -121,6 +140,7 @@ export class OfferService {
 
   /** sync with server */
   getoffers() {
+    this.state.cleanUpInboundOffers();
     this.api.sendMessage(
       { "action":"offer",
         "data": {
@@ -143,11 +163,13 @@ export class OfferService {
   }
 
   publishoffer() {
+    var publish = Object.assign({}, this._userinfo$.value);
+    publish.contactinfo = "";
     this.api.sendMessage(
       { "action":"offer",
         "data":
           { "method":"publishoffer",
-            "payload": this._userinfo$.value
+            "payload": publish
           }
       }
     );

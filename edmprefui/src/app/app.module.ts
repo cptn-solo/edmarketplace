@@ -16,12 +16,18 @@ import { MatRippleModule } from '@angular/material/core';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { FormsModule } from '@angular/forms';
+import { OffersComponent } from './components/offers/offers.component';
 @NgModule({
   declarations: [
     AppComponent,
     MyofferComponent,
-    TradeitemslistComponent
+    TradeitemslistComponent,
+    OffersComponent
   ],
   imports: [
     BrowserModule,
@@ -36,6 +42,10 @@ import { FormsModule } from '@angular/forms';
     MatExpansionModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSidenavModule,
+    MatListModule,
+    MatChipsModule,
+    MatSlideToggleModule,
     FormsModule,
   ],
   providers: [],

@@ -5,7 +5,7 @@ export interface UserInfo {
     location: string | null;
     nickname: string | null;
     contactinfo: string | null;
-    items: Array<TradeItem> | null;
+    items: Array<TradeItem>;
     published: boolean;
     changed: boolean;
 }

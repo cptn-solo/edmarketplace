@@ -1,62 +1,100 @@
 <mat-accordion class="example-headers-align" multi>
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+            My Offer Info
+            </mat-panel-title>
+            <mat-panel-description>
+            Share your location and contact info
+            </mat-panel-description>
+        </mat-expansion-panel-header>
+        <div class="offer-info">
+            <mat-form-field appearance="fill">
+                <mat-label>Offer location (system)</mat-label>
+                <input matInput
+                    maxLength="100"
+                    [(ngModel)]="userinfo.location">
+            </mat-form-field>
+
+            <mat-form-field appearance="fill">
+                <mat-label>Nickname</mat-label>
+                <input matInput
+                    maxLength="100"
+                    [(ngModel)]="userinfo.nickname">
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="contact-info">
+                <mat-label>Contact details (discord)</mat-label>
+                <textarea matInput #contactInfo
+                    placeholder="Not shared until trade request is accepted by your party"
+                    maxLength="200"
+                    [(ngModel)]="userinfo.contactinfo">
+                </textarea>
+                <mat-hint align="end">{{contactInfo.value.length}} / {{contactInfo.maxLength}}</mat-hint>
+            </mat-form-field>
+        </div>
+        <mat-action-row>
+            <button mat-button color="accent" (click)="updateinfo()">Update</button>
+        </mat-action-row>
+    </mat-expansion-panel>
     <mat-expansion-panel [expanded]="true">
-    <mat-expansion-panel-header>
-        <mat-panel-title>
-        Trade items
-        </mat-panel-title>
-    </mat-expansion-panel-header>
-    <table mat-table [dataSource]="dataSource" matSort>
-        <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Item Name</th>
-            <td mat-cell *matCellDef="let element">{{element.name}}</td>
-        </ng-container>
-        <ng-container matColumnDef="id">
-            <th mat-header-cell *matHeaderCellDef>Code</th>
-            <td mat-cell *matCellDef="let element">{{element.id}}</td>
-        </ng-container>
-        <ng-container matColumnDef="stock">
-            <th mat-header-cell *matHeaderCellDef>I have</th>
-            <td mat-cell *matCellDef="let element"><b>{{element.stock}}</b></td>
-        </ng-container>
-        <ng-container matColumnDef="supply">
-            <th mat-header-cell *matHeaderCellDef>Supply</th>
-            <td mat-cell *matCellDef="let element">
-                <button mat-icon-button aria-label="Remove one" (click)="change('supply', -1, element)">
-                    <mat-icon>remove</mat-icon>
-                </button>
-                <b>{{element.supply}}</b>
-                <button mat-icon-button aria-label="Add one" (click)="change('supply', +1, element)">
-                    <mat-icon>add</mat-icon>
-                </button>
-            </td>
-        </ng-container>
-        <ng-container matColumnDef="demand">
-            <th mat-header-cell *matHeaderCellDef>Demand</th>
-            <td mat-cell *matCellDef="let element">
-                <button mat-icon-button aria-label="Remove one" (click)="change('demand', -1, element)">
-                    <mat-icon>remove</mat-icon>
-                </button>
-                <b>{{element.demand}}</b>
-                <button mat-icon-button aria-label="Add one" (click)="change('demand', +1, element)">
-                    <mat-icon>add</mat-icon>
-                </button>
-            </td>
-        </ng-container>
-        <ng-container matColumnDef="settings">
-            <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let item; let i = index;">
-                <button mat-icon-button
-                    (click)="delete(i)" color="warn">
-                    <mat-icon>clear</mat-icon>
-                </button>
-            </td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr
-            mat-row
-            *matRowDef="let row; columns: displayedColumns;">
-        </tr>
-    </table>
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+            Trade items
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+        <table mat-table [dataSource]="dataSource" matSort>
+            <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Item Name</th>
+                <td mat-cell *matCellDef="let element"><b>{{element.name}}</b></td>
+            </ng-container>
+            <ng-container matColumnDef="id">
+                <th mat-header-cell *matHeaderCellDef>Code</th>
+                <td mat-cell *matCellDef="let element">{{element.id}}</td>
+            </ng-container>
+            <ng-container matColumnDef="stock">
+                <th mat-header-cell *matHeaderCellDef>I have</th>
+                <td mat-cell *matCellDef="let element"><b>{{element.stock}}</b></td>
+            </ng-container>
+            <ng-container matColumnDef="supply">
+                <th mat-header-cell *matHeaderCellDef>Supply</th>
+                <td mat-cell *matCellDef="let element">
+                    <button mat-icon-button aria-label="Remove one" (click)="change('supply', -1, element)">
+                        <mat-icon>remove</mat-icon>
+                    </button>
+                    <b>{{element.supply}}</b>
+                    <button mat-icon-button aria-label="Add one" (click)="change('supply', +1, element)">
+                        <mat-icon>add</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
+            <ng-container matColumnDef="demand">
+                <th mat-header-cell *matHeaderCellDef>Demand</th>
+                <td mat-cell *matCellDef="let element">
+                    <button mat-icon-button aria-label="Remove one" (click)="change('demand', -1, element)">
+                        <mat-icon>remove</mat-icon>
+                    </button>
+                    <b>{{element.demand}}</b>
+                    <button mat-icon-button aria-label="Add one" (click)="change('demand', +1, element)">
+                        <mat-icon>add</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
+            <ng-container matColumnDef="settings">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let item; let i = index;">
+                    <button mat-icon-button
+                        (click)="delete(i)" color="warn">
+                        <mat-icon>clear</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr
+                mat-row
+                *matRowDef="let row; columns: displayedColumns;">
+            </tr>
+        </table>
     </mat-expansion-panel>
     <mat-expansion-panel>
         <mat-expansion-panel-header>
@@ -68,39 +106,38 @@
             </mat-panel-description>
         </mat-expansion-panel-header>
 
-        <div>
-            <mat-form-field appearance="fill">
+        <div class="added-item">
+            <mat-form-field appearance="fill" class="item-name">
                 <mat-label>Item Name</mat-label>
                 <input matInput [(ngModel)]="addeditem.name">
             </mat-form-field>
 
-            <mat-form-field appearance="fill">
+            <mat-form-field appearance="fill" class="item-code">
                 <mat-label>Item Code</mat-label>
                 <input matInput [(ngModel)]="addeditem.id">
             </mat-form-field>
+            <div>
+                <mat-form-field appearance="fill" class="item-stock">
+                    <mat-label>Current stock</mat-label>
+                    <input matInput type="number" min="0" max="1000" step="1"
+                        oninput="validity.valid||(value='0');"
+                        [(ngModel)]="addeditem.stock">
+                </mat-form-field>
 
-        </div>
-        <div>
-            <mat-form-field appearance="fill">
-                <mat-label>Current stock</mat-label>
-                <input matInput type="number" min="0" max="1000" step="1"
-                    oninput="validity.valid||(value='0');"
-                    [(ngModel)]="addeditem.stock">
-            </mat-form-field>
+                <mat-form-field appearance="fill" class="item-stock">
+                    <mat-label>Supply</mat-label>
+                    <input matInput type="number" min="0" max="1000" step="1"
+                        oninput="validity.valid||(value='0');"
+                        [(ngModel)]="addeditem.supply">
+                </mat-form-field>
 
-            <mat-form-field appearance="fill">
-                <mat-label>Supply</mat-label>
-                <input matInput type="number" min="0" max="1000" step="1"
-                    oninput="validity.valid||(value='0');"
-                    [(ngModel)]="addeditem.supply">
-            </mat-form-field>
-
-            <mat-form-field appearance="fill">
-                <mat-label>Demand</mat-label>
-                <input matInput type="number" min="0" max="1000" step="1"
-                    oninput="validity.valid||(value='0');"
-                    [(ngModel)]="addeditem.demand">
-            </mat-form-field>
+                <mat-form-field appearance="fill" class="item-stock">
+                    <mat-label>Demand</mat-label>
+                    <input matInput type="number" min="0" max="1000" step="1"
+                        oninput="validity.valid||(value='0');"
+                        [(ngModel)]="addeditem.demand">
+                </mat-form-field>
+            </div>
 
         </div>
         <mat-action-row>

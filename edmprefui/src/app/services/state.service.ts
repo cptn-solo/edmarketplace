@@ -31,6 +31,34 @@ export class StateService {
     this.offers$.subscribe(val => this.storage.setInfo(val, OFFERS_KEY));
   }
 
+  processOfferRemove(connectionId: string) {
+    if (connectionId === this._userInfo$.value.connectionid) return; // skip my own offer broadcast
+
+    var offers = this._offers$.value;
+    var idxExisting = offers.findIndex(o => o.connectionid === connectionId);
+    if (idxExisting >= 0) {
+      offers.splice(idxExisting, 1);
+    }
+    this._offers$.next(offers);
+  }
+
+  cleanUpInboundOffers() {
+    this._offers$.next([]);
+  }
+  processInboundOffer(offer: UserInfo) {
+    if (offer.connectionid === "" ||
+      offer.connectionid === this._userInfo$.value.connectionid) return; // skip my own offer broadcast
+
+    var offers = this._offers$.value;
+    var idxExisting = offers.findIndex(o => o.connectionid === offer.connectionid);
+    if (idxExisting >= 0) {
+      offers[idxExisting].items = offer.items;
+    } else {
+      offers.push(offer);
+    }
+    this._offers$.next(offers);
+  }
+
   updateUserTradeItems(items: Array<TradeItem>) {
     var userInfo = this._userInfo$.value as UserInfo;
     if (userInfo) {
@@ -38,6 +66,7 @@ export class StateService {
     }
     this._userInfo$.next(userInfo);
   }
+
   updateUserInfo(info: UserInfo) {
     var userInfo = this._userInfo$.value as UserInfo;
     var items = userInfo.items;

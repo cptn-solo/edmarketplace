@@ -1,0 +1,66 @@
+.offers-header {
+    display: flex;
+    margin: 8px;
+    .left-header, .right-header {
+        span {
+            text-align: center;
+            width: 100%;
+        }
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+        flex: 1;
+    }
+    .left-header {
+        margin-right: 20px;
+    }
+}
+.offer {
+    border-radius: 5px;
+    border-style: solid;
+    border-color: gray;
+    border-width: 1px;
+    margin: 8px;
+    .offer-header {
+        display: flex;
+        flex-flow: row;
+        .system-name, .nick-name {
+            flex: 1;
+            line-height: 14px;
+            height: 14px;
+            margin: 8px 0px;
+            padding: 8px 8px;
+        }
+        .system-name {
+            color: azure;
+            width: 200px;
+        }
+        .nick-name {
+            width: 150px;
+            color: lightgreen;
+            text-align: right;
+        }
+    }
+    .offer-items {
+        display: flex;
+        .demand-items, .supply-items {
+            display: flex;
+            flex-wrap: wrap;
+            flex-direction: row;
+            padding: 8px;
+            @media screen and (max-width: 600px) {
+                flex-direction: column;
+            }
+            flex: 1;
+            .mat-chip {
+                margin: 8px;
+                b {
+                    font-size: 18px;
+                }
+            }
+        }
+        .demand-items {
+            margin-right: 20px;
+        }
+    }
+}
