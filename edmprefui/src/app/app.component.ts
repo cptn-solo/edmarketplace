@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/internal/operators/takeUntil';
-import { EdmpwsapiService } from './edmpwsapi.service';
+import { EdmpwsapiService } from './services/edmpwsapi.service';
 
 @Component({
   selector: 'app-root',
@@ -16,8 +16,8 @@ export class AppComponent implements OnDestroy, OnInit {
 
   private ngUnsubscribe = new Subject();
 
-  constructor (private service: EdmpwsapiService) {
-    this.service.connected$
+  constructor (private api: EdmpwsapiService) {
+    this.api.connected$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(val => this.connectionMonitor(val));
   }
@@ -32,11 +32,11 @@ export class AppComponent implements OnDestroy, OnInit {
   }
 
   connect() {
-    this.service.connect();
+    this.api.connect();
   }
 
   disconnect() {
-    this.service.close();
+    this.api.close();
   }
 
   connectionMonitor(val: boolean) {

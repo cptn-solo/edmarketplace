@@ -1,0 +1,20 @@
+<mat-toolbar>
+    <button mat-raised-button
+        *ngIf="connected"
+        (click)="getoffers()">
+        Reload
+    </button>
+    <span class="toolbar-spacer"></span>
+    <button mat-raised-button
+        *ngIf="connected && published"
+        (click)="unpublishoffer()">
+        Remove Offer
+    </button>
+    &nbsp;
+    <button mat-raised-button color="{{changed?'accent':'primary'}}"
+        *ngIf="connected"
+        (click)="publishoffer()">
+        {{published?'Update Offer':'Pulish Offer'}}
+    </button>
+</mat-toolbar>
+<app-tradeitemslist></app-tradeitemslist>

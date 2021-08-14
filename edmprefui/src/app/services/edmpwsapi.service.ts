@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { environment } from '../environments/environment';
+import { environment } from '../../environments/environment';
 
 import { catchError, tap, switchAll, map } from 'rxjs/operators';
 import { BehaviorSubject, Subject } from 'rxjs';

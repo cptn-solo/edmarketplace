@@ -11,6 +11,22 @@ exports.getCurrentConnectionIds = async () => {
         throw e;
     }
 };
+
+exports.getOfferByConnectionId = async (connectionId) => {
+    try {
+        var params = {
+            Key: { connectionId },
+            TableName: process.env.TABLE_NAME
+        };
+        console.log('getOfferByConnectionId params: ' + JSON.stringify(params));
+        var result = await ddb.get(params).promise();
+        return result;
+    } catch (e) {
+        console.log('getOfferByConnectionId failed: ' + JSON.stringify(e));
+        throw e;
+    }
+}
+
 exports.broadcastPostCalls = async (postCalls) => {
     try {
         await Promise.all(postCalls);
@@ -31,13 +47,34 @@ exports.postOfferDeleteToAllConnections = async (apigwManagementApi, deletedConn
 };
 
 exports.deleteOffer = async (apigwManagementApi, connectionId, notify) => {
+    const emptyOffer = {
+        connectionId: connectionId,
+    }
+
+    const putParams = {
+        TableName: process.env.TABLE_NAME,
+        Item: emptyOffer
+    };
+
+    try {
+        await ddb.put(putParams).promise();
+        if (notify) {
+            await this.postOfferDeleteToAllConnections(apigwManagementApi, connectionId);
+        }
+    } catch (e) {
+        console.log('deleteOffer: ' + JSON.stringify(e));
+        // skipping this ex
+    }
+};
+
+exports.delist = async (apigwManagementApi, connectionId, notify) => {
     try {
         await ddb.delete({ TableName: process.env.TABLE_NAME, Key: { connectionId } }).promise();
         if (notify) {
             await this.postOfferDeleteToAllConnections(apigwManagementApi, connectionId);
         }
     } catch (e) {
-        console.log('deleteOffer: ' + JSON.stringify(e));
+        console.log('delist: ' + JSON.stringify(e));
         // skipping this ex
     }
 };
