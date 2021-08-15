@@ -1,0 +1,33 @@
+<mat-toolbar>
+    <button mat-raised-button
+        *ngIf="connected"
+        (click)="getoffers()">
+        Reload
+    </button>
+    <span class="toolbar-spacer"></span>
+    <mat-slide-toggle [(ngModel)]="onlymatched" (change)="applyCurrentFilters()">Only matched</mat-slide-toggle>
+</mat-toolbar>
+<div>
+    <div class="offers-header">
+        <div class="left-header"><span>Demand</span></div>
+        <div class="right-header"><span>Supply</span></div>
+    </div>
+    <div *ngFor="let offer of filteredOffers" class="offer">
+        <div class="offer-header">
+            <div class="system-name">{{offer.location}}</div>
+            <div class="nick-name">{{offer.nickname}}</div>
+        </div>
+        <div class="offer-items">
+            <div class="demand-items">
+                <mat-chip-list *ngFor="let item of offer.items">
+                    <mat-chip color="{{checkMatch(item, true) ? 'accent' :'primary'}}" selected *ngIf="item.demand > 0">{{item.name}}&nbsp;<b>{{item.demand}}</b></mat-chip>
+                </mat-chip-list>
+            </div>
+            <div class="supply-items">
+                <mat-chip-list *ngFor="let item of offer.items">
+                    <mat-chip color="{{checkMatch(item, false) ? 'accent' :'primary'}}" selected *ngIf="item.supply > 0">{{item.name}}&nbsp;<b>{{item.supply}}</b></mat-chip>
+                </mat-chip-list>
+            </div>
+        </div>
+    </div>
+</div>

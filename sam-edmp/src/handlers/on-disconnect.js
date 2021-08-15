@@ -17,7 +17,7 @@ exports.onDisconnect = async event => {
     });
 
     try {
-        await shared.deleteOffer(apigwManagementApi, event.requestContext.connectionId, true)
+        await shared.delist(apigwManagementApi, event.requestContext.connectionId, true)
     } catch (err) {
         return { statusCode: 500, body: 'Failed to disconnect: ' + JSON.stringify(err) };
     }

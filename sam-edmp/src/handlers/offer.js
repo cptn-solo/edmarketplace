@@ -8,6 +8,7 @@ const { TABLE_NAME } = process.env;
 const OFFER_METHOD_PUBLISH = "publishoffer";
 const OFFER_METHOD_GET = "getoffers";
 const OFFER_METHOD_REMOVE = "removeoffer";
+const OFFER_METHOD_ENLIST = "enlist";
 // debug: remove later:
 const OFFER_METHOD_READ = "readoffers";
 
@@ -20,20 +21,24 @@ exports.offer = async event => {
     try {
         console.log('request body: ' + event.body);
         const eventBody = JSON.parse(event.body);
+        const connectionid = event.requestContext.connectionId;
 
         // switch method being called
         switch (eventBody.data.method) {
             case OFFER_METHOD_PUBLISH:
                 // 1. store new/updated offer data
-                const partyOffer = await publishOffer(event.requestContext.connectionId, eventBody.data.payload);
+                const partyOffer = await publishOffer(connectionid, eventBody.data.payload);
                 // 2. broadcast this offer to all connected users
                 await postOfferToAllConnections(apigwManagementApi, partyOffer);
-                return { statusCode: 200, body: JSON.stringify({ connectionid: event.requestContext.connectionId })};
+                return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case OFFER_METHOD_GET:
-                const offers = await postAllOffersToConnection(apigwManagementApi, event.requestContext.connectionId);
+                const offers = await postAllOffersToConnection(apigwManagementApi, connectionid);
                 return { statusCode: 200, body: JSON.stringify({ offers })};
+            case OFFER_METHOD_ENLIST:
+                const myOffer = await postMyOfferToConnection(apigwManagementApi, connectionid, eventBody.data.payload);
+                return { statusCode: 200, body: JSON.stringify({ myOffer })};
             case OFFER_METHOD_REMOVE:
-                await shared.deleteOffer(apigwManagementApi, event.requestContext.connectionId, true); // notify all users
+                await shared.deleteOffer(apigwManagementApi, connectionid, true); // notify all users
                 return { statusCode: 200, body: JSON.stringify({})};
             case OFFER_METHOD_READ:
                 const connections = await ddb.scan({ TableName: TABLE_NAME }).promise();
@@ -50,6 +55,12 @@ exports.offer = async event => {
 };
 
 /** method handlers*/
+async function postMyOfferToConnection(apigwManagementApi, connectionId, payload) {
+    const item = await shared.getOfferByConnectionId(connectionId);
+    console.log('postMyOfferToConnection: offer' + JSON.stringify(item.Item));
+    const paiload = { myoffer: item.Item };
+    await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(paiload) }).promise();
+}
 
 async function postAllOffersToConnection(apigwManagementApi, connectionId) {
     const connections = await ddb.scan({ TableName: TABLE_NAME }).promise();
@@ -66,10 +77,10 @@ async function postOfferToConnection(apigwManagementApi, connectionId, partyOffe
     } catch (e) {
         if (e.statusCode === 410) {
             console.log(`Found stale connection, deleting ${connectionId}`);
-            await shared.deleteOffer(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
+            await shared.delist(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
         } else if (e.statusCode === 400) {
             console.log(`Found invalid connection, deleting ${connectionId}`);
-            await shared.deleteOffer(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
+            await shared.delist(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
         } else {
             console.log('postOfferToConnection: ' + JSON.stringify(e));
             throw e;

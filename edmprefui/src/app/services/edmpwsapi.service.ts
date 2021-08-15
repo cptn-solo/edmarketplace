@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { environment } from '../environments/environment';
+import { environment } from '../../environments/environment';
 
 import { catchError, tap, switchAll, map } from 'rxjs/operators';
 import { BehaviorSubject, Subject } from 'rxjs';
@@ -34,10 +34,7 @@ export class EdmpwsapiService {
         }
       ));
       this.messagesSubject$.next(messages);
-
-      // this subscription is a hack to prevent socket$ from being disposed :/ no idea why this happens:
-      // TODO: unsubscribe on socket change as this variable is replaced in that case
-      messages.subscribe();
+      // MUST subscribe from the app component to prevent pipe from being released
     }
   }
 

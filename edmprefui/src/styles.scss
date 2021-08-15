@@ -31,3 +31,14 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .toolbar-spacer {
     flex: 1 1 auto;
 }
+/* dirty fix for gap between app toolbar and inner toolbars */
+.mat-sidenav-container {
+    @media screen and (max-width: 600px) {
+        margin-top: 0px !important;
+    }
+}
+.mat-toolbar, .mat-toolbar-row, .mat-toolbar-single-row {
+    @media screen and (max-width: 600px) {
+        height: 56px !important;
+    }
+}

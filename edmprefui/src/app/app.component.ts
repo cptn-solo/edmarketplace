@@ -1,7 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { MediaMatcher } from '@angular/cdk/layout';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/internal/operators/takeUntil';
-import { EdmpwsapiService } from './edmpwsapi.service';
+import { EdmpwsapiService } from './services/edmpwsapi.service';
+import { OfferService } from './services/offer.service';
 
 @Component({
   selector: 'app-root',
@@ -14,12 +16,33 @@ export class AppComponent implements OnDestroy, OnInit {
   connectdisabled: boolean = true;
   disconnectdisabled: boolean = true;
 
-  private ngUnsubscribe = new Subject();
+  mobileQuery: MediaQueryList;
 
-  constructor (private service: EdmpwsapiService) {
-    this.service.connected$
+  navItems = [
+    { url: 'myoffer', name: 'My Offer'},
+    { url: 'offers', name: 'Incoming Offers'}
+  ];
+
+
+  private ngUnsubscribe = new Subject();
+  private _mobileQueryListener: () => void;
+
+  constructor(
+    private api: EdmpwsapiService,
+    private offers: OfferService,
+    private changeDetectorRef: ChangeDetectorRef,
+    private media: MediaMatcher) {
+    this.api.messages$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe();// to hold a reference only and prevent pipe release in services
+
+    this.api.connected$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(val => this.connectionMonitor(val));
+
+    this.mobileQuery = media.matchMedia('(max-width: 600px)');
+    this._mobileQueryListener = () => changeDetectorRef.detectChanges();
+    this.mobileQuery.addListener(this._mobileQueryListener);
   }
 
   ngOnInit() {
@@ -27,16 +50,17 @@ export class AppComponent implements OnDestroy, OnInit {
   }
 
   ngOnDestroy() {
+    this.mobileQuery.removeListener(this._mobileQueryListener);
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
   }
 
   connect() {
-    this.service.connect();
+    this.api.connect();
   }
 
   disconnect() {
-    this.service.close();
+    this.api.close();
   }
 
   connectionMonitor(val: boolean) {
