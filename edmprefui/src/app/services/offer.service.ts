@@ -63,6 +63,9 @@ export class OfferService {
       } else if (jsonData.offer !== undefined) {
         // incoming offer, should be processed to get matches and other usefull info
         this.state.processInboundOffer(jsonData.offer);
+      } else if (jsonData.batch !== undefined) {
+        // incoming offers batch, should be processed to get matches and other usefull info
+        this.state.processInboundOffersBatch(jsonData.batch);
       } else if (jsonData.dropoffer !== undefined) {
         // some offer was dropped notification, should be processed to update offers
         this.state.processOfferRemove(jsonData.dropoffer);
@@ -140,7 +143,7 @@ export class OfferService {
 
   /** sync with server */
   getoffers() {
-    this.state.cleanUpInboundOffers();
+    this.state.prepareOffersBatchProcessing();
     this.api.sendMessage(
       { "action":"offer",
         "data": {

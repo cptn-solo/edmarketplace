@@ -12,6 +12,8 @@ const OFFER_METHOD_ENLIST = "enlist";
 // debug: remove later:
 const OFFER_METHOD_READ = "readoffers";
 
+const BROADCAST_BATCH_SIZE = 20; // offers per broadcast
+
 exports.offer = async event => {
     const apigwManagementApi = new AWS.ApiGatewayManagementApi({
         apiVersion: '2018-11-29',
@@ -64,9 +66,18 @@ async function postMyOfferToConnection(apigwManagementApi, connectionId, payload
 
 async function postAllOffersToConnection(apigwManagementApi, connectionId) {
     const connections = await ddb.scan({ TableName: TABLE_NAME }).promise();
-    const offers = connections.Items.filter(c => !!c.offer);
-    await shared.broadcastPostCalls(offers.map(async (partyOffer) => {
-        await postOfferToConnection(apigwManagementApi, connectionId, partyOffer);
+    var offers = connections.Items.filter(c => !!c.offer);
+    var page = 0;
+    var ofpages = parseInt(offers.length / BROADCAST_BATCH_SIZE) + ((offers.length % BROADCAST_BATCH_SIZE) ? 1 : 0);
+    var postcalls = [];
+    while(offers.length > 0) {
+        const batch = offers.splice(0, BROADCAST_BATCH_SIZE);
+        const payload = { batch, page, ofpages };
+        postcalls.push(payload);
+        page ++;
+    }
+    await shared.broadcastPostCalls(postcalls.map(async (batch) => {
+        await postOfferToConnection(apigwManagementApi, connectionId, batch);
     }));
     return offers;
 }
