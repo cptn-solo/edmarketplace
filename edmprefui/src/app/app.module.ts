@@ -7,8 +7,6 @@ import { MyofferComponent } from './components/myoffer/myoffer.component';
 import { TradeitemslistComponent } from './components/tradeitemslist/tradeitemslist.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
-import { MatSortModule } from '@angular/material/sort';
-import { MatTableModule } from '@angular/material/table';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -33,8 +31,6 @@ import { OffersComponent } from './components/offers/offers.component';
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    MatTableModule,
-    MatSortModule,
     MatToolbarModule,
     MatIconModule,
     MatButtonModule,

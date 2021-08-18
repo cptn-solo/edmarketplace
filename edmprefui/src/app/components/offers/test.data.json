@@ -1,47 +1,58 @@
 [
-    {"connectionid":"","location":"some system","nickname":"some guy","contactinfo":"some discord",
+    {"connectionid":"aaaaggggrrrrr","location":"SIRIUS","nickname":"jixxed","contactinfo":"some discord",
         "changed":false,"published":true,
         "items":[
-            {"id":"item code1","name":"some item name 1","stock":3,"supply":2,"demand":1},
-            {"id":"item other code","name":"some other item","stock":14,"supply":4,"demand":2},
-            {"id":"another one","name":"yet another one","stock":3,"supply":5,"demand":0},
-            {"id":"more","name":"and one more","stock":3,"supply":2,"demand":0}
+            {"tradeid": 1,
+                "sid":"degradedpowerregulator","sname":"Degraded Power Regulator","sstock":3,"supply":2,
+                "did":"settldefenceplans","dname":"Settlement Defence Plans","dstock":0, "demand":3},
+            {"tradeid": 3,
+                "sid":"degradedpowerregulator","sname":"Degraded Power Regulator","sstock":3,"supply":2,
+                "did":"settldefenceplans","dname":"Settlement Defence Plans","dstock":0, "demand":3},
+            {"tradeid": 8,
+                "sid":"degradedpowerregulator","sname":"Degraded Power Regulator","sstock":3,"supply":2,
+                "did":"settldefenceplans","dname":"Settlement Defence Plans","dstock":0, "demand":3}
         ]
     },
-    {"connectionid":"","location":"some system","nickname":"some guy","contactinfo":"some discord",
+    {"connectionid":"aaaaggggrrrrr","location":"SIRIUS","nickname":"jixxed","contactinfo":"some discord",
         "changed":false,"published":true,
         "items":[
-            {"id":"item code1","name":"some item name 1","stock":3,"supply":2,"demand":1},
-            {"id":"item other code","name":"some other item","stock":14,"supply":4,"demand":2},
-            {"id":"another one","name":"yet another one","stock":3,"supply":5,"demand":0},
-            {"id":"more","name":"and one more","stock":3,"supply":2,"demand":0}
+            {"tradeid": 1,
+                "sid":"degradedpowerregulator","sname":"Degraded Power Regulator","sstock":3,"supply":2,
+                "did":"settldefenceplans","dname":"Settlement Defence Plans","dstock":0, "demand":3},
+            {"tradeid": 3,
+                "sid":"degradedpowerregulator","sname":"Degraded Power Regulator","sstock":3,"supply":2,
+                "did":"settldefenceplans","dname":"Settlement Defence Plans","dstock":0, "demand":3},
+            {"tradeid": 8,
+                "sid":"degradedpowerregulator","sname":"Degraded Power Regulator","sstock":3,"supply":2,
+                "did":"settldefenceplans","dname":"Settlement Defence Plans","dstock":0, "demand":3}
         ]
     },
-    {"connectionid":"","location":"some system","nickname":"some guy","contactinfo":"some discord",
+    {"connectionid":"aaaaggggrrrrr","location":"SIRIUS","nickname":"jixxed","contactinfo":"some discord",
         "changed":false,"published":true,
         "items":[
-            {"id":"item code","name":"some item name","stock":3,"supply":2,"demand":1},
-            {"id":"item other code","name":"some other item","stock":14,"supply":4,"demand":2},
-            {"id":"another one","name":"yet another one","stock":3,"supply":5,"demand":0},
-            {"id":"more","name":"and one more","stock":3,"supply":2,"demand":0}
+            {"tradeid": 1,
+                "sid":"degradedpowerregulator","sname":"Degraded Power Regulator","sstock":3,"supply":2,
+                "did":"settldefenceplans","dname":"Settlement Defence Plans","dstock":0, "demand":3},
+            {"tradeid": 3,
+                "sid":"degradedpowerregulator","sname":"Degraded Power Regulator","sstock":3,"supply":2,
+                "did":"settldefenceplans","dname":"Settlement Defence Plans","dstock":0, "demand":3},
+            {"tradeid": 8,
+                "sid":"degradedpowerregulator","sname":"Degraded Power Regulator","sstock":3,"supply":2,
+                "did":"settldefenceplans","dname":"Settlement Defence Plans","dstock":0, "demand":3}
         ]
     },
-    {"connectionid":"","location":"some system","nickname":"some guy","contactinfo":"some discord",
+    {"connectionid":"aaaaggggrrrrr","location":"SIRIUS","nickname":"jixxed","contactinfo":"some discord",
         "changed":false,"published":true,
         "items":[
-            {"id":"item code","name":"some item name","stock":3,"supply":2,"demand":1},
-            {"id":"item other code","name":"some other item","stock":14,"supply":4,"demand":2},
-            {"id":"another one","name":"yet another one","stock":3,"supply":5,"demand":0},
-            {"id":"more","name":"and one more","stock":3,"supply":2,"demand":0}
-        ]
-    },
-    {"connectionid":"","location":"some system","nickname":"some guy","contactinfo":"some discord",
-        "changed":false,"published":true,
-        "items":[
-            {"id":"item code","name":"some item name","stock":3,"supply":2,"demand":1},
-            {"id":"item other code","name":"some other item","stock":14,"supply":4,"demand":2},
-            {"id":"another one","name":"yet another one","stock":3,"supply":5,"demand":0},
-            {"id":"more","name":"and one more","stock":3,"supply":2,"demand":0}
+            {"tradeid": 1,
+                "sid":"degradedpowerregulator","sname":"Degraded Power Regulator","sstock":3,"supply":2,
+                "did":"settldefenceplans","dname":"Settlement Defence Plans","dstock":0, "demand":3},
+            {"tradeid": 3,
+                "sid":"degradedpowerregulator","sname":"Degraded Power Regulator","sstock":3,"supply":2,
+                "did":"settldefenceplans","dname":"Settlement Defence Plans","dstock":0, "demand":3},
+            {"tradeid": 8,
+                "sid":"degradedpowerregulator","sname":"Degraded Power Regulator","sstock":3,"supply":2,
+                "did":"settldefenceplans","dname":"Settlement Defence Plans","dstock":0, "demand":3}
         ]
     }
 ]

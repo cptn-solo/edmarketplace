@@ -43,26 +43,21 @@ export class OffersComponent implements OnInit, OnDestroy {
 
   }
   applyCurrentFilters() {
-    this.filteredOffers = this.inboundOffers.filter(o => this.matchOffers(o));
-  }
-  checkMatch(item: TradeItem, demand: boolean ): boolean {
-    if (demand) {
-      return item.demand > 0 && this.userInfo.items.findIndex(m => m.supply > 0 && m.id === item.id) >= 0;
-    } else {
-      return item.supply > 0 && this.userInfo.items.findIndex(m => m.demand > 0 && m.id === item.id) >= 0;
-    }
+    this.filteredOffers = this.inboundOffers
+      .map(f => {
+        var filtered = Object.assign({}, f);
+        if (this.onlymatched)
+          filtered.items = filtered.items.filter(i => this.checkMatch(i, true) || this.checkMatch(i, false))
+        return filtered;
+      })
+      .filter(o => this.onlymatched ? o.items.length > 0 : true);
   }
 
-  matchOffers(offer: UserInfo) {
-    // TODO: exact match can be implemented as well
-    if (this.onlymatched) {
-      var cansupplysome = offer.items.findIndex(i => i.demand > 0 &&
-        this.userInfo.items.findIndex(m => m.supply > 0 && m.id === i.id) >= 0) >= 0;
-      var cangetsome = offer.items.findIndex(i => i.supply > 0 &&
-        this.userInfo.items.findIndex(m => m.demand > 0 && m.id === i.id) >= 0) >= 0;
-      return cansupplysome || cangetsome;
+  checkMatch(item: TradeItem, demand: boolean ): boolean {
+    if (demand) {
+      return item.demand > 0 && this.userInfo.items.findIndex(m => m.supply > 0 && m.sid === item.did) >= 0;
     } else {
-      return true;
+      return item.supply > 0 && this.userInfo.items.findIndex(m => m.demand > 0 && m.did === item.sid) >= 0;
     }
   }
 

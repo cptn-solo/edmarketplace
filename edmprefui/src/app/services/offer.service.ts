@@ -107,7 +107,10 @@ export class OfferService {
     if (!items) {
       items = [];
     }
-    items.push(Object.assign({}, item));
+    var toAdd = Object.assign({}, item);
+    if (toAdd.tradeid === -1)
+      toAdd.tradeid = items.length ? (items[items.length-1].tradeid +1) : 0
+    items.push(toAdd);
     this.state.updateUserTradeItems(items);
     this.updateChangedState(true);
   }
@@ -118,7 +121,7 @@ export class OfferService {
       items = [];
       items.push(item);
     } else {
-      var idx = items.findIndex(v => v.id === item.id);
+      var idx = items.findIndex(v => v.tradeid === item.tradeid );
       if (idx >= 0) {
         items[idx] = item;
       } else {
@@ -129,10 +132,10 @@ export class OfferService {
     this.updateChangedState(true);
   }
 
-  deleteItem(id: string) {
+  deleteItem(id: number) {
     var items = this._items$.value as Array<TradeItem>;
     if (!!items && items.length > 0) {
-      var idx = items.findIndex(v => v.id === id);
+      var idx = items.findIndex(v => v.tradeid === id);
       if (idx >= 0) {
         items.splice(idx, 1);
       }
