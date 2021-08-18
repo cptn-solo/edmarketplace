@@ -5,24 +5,53 @@ const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: 
 /** utilities */
 exports.getCurrentConnectionIds = async () => {
     try {
-        return await ddb.scan({ TableName: process.env.TABLE_NAME, ProjectionExpression: 'connectionId' }).promise();
+        return await ddb.scan({ TableName: process.env.CONN_TABLE_NAME, ProjectionExpression: 'connectionId' }).promise();
     } catch (e) {
         console.log('getCurrentConnectionIds: ' + JSON.stringify(e));
         throw e;
     }
 };
 
-exports.getOfferByConnectionId = async (connectionId) => {
+exports.getUserTraceTokenByConnectionId = async (connectionId) => {
     try {
         var params = {
             Key: { connectionId },
-            TableName: process.env.TABLE_NAME
+            TableName: process.env.CONN_TABLE_NAME
         };
-        console.log('getOfferByConnectionId params: ' + JSON.stringify(params));
+        console.log('getUserTraceTokenByConnectionId params: ' + JSON.stringify(params));
         var result = await ddb.get(params).promise();
-        return result;
+        return result.Item.token;
     } catch (e) {
-        console.log('getOfferByConnectionId failed: ' + JSON.stringify(e));
+        console.log('getUserTraceTokenByConnectionId failed: ' + JSON.stringify(e));
+        throw e;
+    }
+};
+
+exports.putUserTraceTokenForConnectionId = async (connectionId, token) => {
+    const putParams = {
+        TableName: process.env.CONN_TABLE_NAME,
+        Item: { connectionId, token }
+    };
+
+    try {
+        await ddb.put(putParams).promise();
+    } catch (e) {
+        console.log('putUserTraceTokenForConnectionId: ' + JSON.stringify(e));
+        throw e;
+    }
+}
+
+exports.getOfferByToken = async (token) => {
+    try {
+        var params = {
+            Key: { token },
+            TableName: process.env.TRACE_TABLE_NAME
+        };
+        console.log('getOfferByToken params: ' + JSON.stringify(params));
+        var result = await ddb.get(params).promise();
+        return result.Item;
+    } catch (e) {
+        console.log('getOfferByToken failed: ' + JSON.stringify(e));
         throw e;
     }
 }
@@ -47,13 +76,9 @@ exports.postOfferDeleteToAllConnections = async (apigwManagementApi, deletedConn
 };
 
 exports.deleteOffer = async (apigwManagementApi, connectionId, notify) => {
-    const emptyOffer = {
-        connectionId: connectionId,
-    }
-
     const putParams = {
         TableName: process.env.TABLE_NAME,
-        Item: emptyOffer
+        Item: { connectionId }
     };
 
     try {

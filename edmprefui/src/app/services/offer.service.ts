@@ -12,10 +12,12 @@ export class OfferService {
   _userinfo$ = new BehaviorSubject<UserInfo>(DEFAULT_USER_INFO);
   _items$ = new BehaviorSubject<Array<TradeItem>>([]);
   _offers$ = new BehaviorSubject<Array<UserInfo>>([]);
+  _token$ = new BehaviorSubject<string>('');
 
   userInfo$ = this._userinfo$.asObservable();
   items$ = this._items$.asObservable();
   offers$ = this._offers$.asObservable();
+  token$ = this._token$.asObservable();
 
   constructor(
     private api: EdmpwsapiService,
@@ -24,13 +26,10 @@ export class OfferService {
       this._items$.next(info.items as Array<TradeItem>);
       this._userinfo$.next(info);
     });
-    this.state.offers$.subscribe(offers => {
-      this._offers$.next(offers);
-    });
-    this.api.connected$
-      .subscribe(val => this.connectionMonitor(val));
-    this.api.messages$
-      .subscribe(data => this.messagesMonitor(data));
+    this.state.offers$.subscribe(offers => this._offers$.next(offers));
+    this.state.traceToken$.subscribe(token => this._token$.next(token));
+    this.api.connected$.subscribe(val => this.connectionMonitor(val));
+    this.api.messages$.subscribe(data => this.messagesMonitor(data));
   }
 
   connectionMonitor(connected: boolean){
@@ -38,7 +37,10 @@ export class OfferService {
       this.api.sendMessage(
         { "action":"offer",
           "data": {
-            "method": "enlist"
+            "method": "enlist",
+            "payload": {
+              "token": this._token$.value
+            }
           }
         }
       );
@@ -53,6 +55,9 @@ export class OfferService {
     try {
       var jsonData = JSON.parse(data);
       if (jsonData.myoffer !== undefined) {
+        // During enlist call user either gets back his sent token (saved from 1st enlist) or newly generated one
+        // if this is a 1st enlist call.
+        this.state.registerUserTraceToken(jsonData.token);
         // enlisted, initial connection info (connection id)
         var userInfo = this._userinfo$.value;
         userInfo.connectionid = jsonData.myoffer.connectionId;

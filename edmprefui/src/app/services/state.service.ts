@@ -6,6 +6,7 @@ import { StorageService } from './storage.service';
 
 const USER_INFO_KEY = 'USER_INFO';
 const OFFERS_KEY = 'OFFERS';
+const TOKEN_KEY = 'TRACE_TOKEN';
 export interface  IncomingOffer {
   connectionId: string; // offerer's connection id
   offer: UserInfo; // offer
@@ -17,23 +18,32 @@ export class StateService {
 
   private _userInfo$ = new BehaviorSubject<UserInfo>(DEFAULT_USER_INFO);
   private _offers$ = new BehaviorSubject<Array<UserInfo>>([]);
+  private _traceToken$ = new BehaviorSubject<string>('');
 
   private _getoffersReset = false;
 
   public userInfo$ = this._userInfo$.asObservable();
   public offers$ = this._offers$.asObservable();
+  public traceToken$ = this._traceToken$.asObservable();
 
   constructor(private storage: StorageService) {
     var userInfo = this.storage.loadInfo(USER_INFO_KEY) as unknown as UserInfo??DEFAULT_USER_INFO;
     var offers = this.storage.loadInfo(OFFERS_KEY) as unknown as Array<UserInfo>??[];
+    var traceToken = this.storage.loadInfo(TOKEN_KEY) as unknown as string??'';
 
     this._userInfo$.next(userInfo);
     this._offers$.next(offers);
+    this._traceToken$.next(traceToken);
 
     // subscribing after initial load to persist all future updates
     // TODO: add throttling to cache changes
     this.userInfo$.subscribe(val => this.storage.setInfo(val, USER_INFO_KEY));
     this.offers$.subscribe(val => this.storage.setInfo(val, OFFERS_KEY));
+    this.traceToken$.subscribe(val => this.storage.setInfo(val, TOKEN_KEY));
+  }
+
+  registerUserTraceToken(token: string) {
+    this._traceToken$.next(token);
   }
 
   processOfferRemove(connectionId: string) {

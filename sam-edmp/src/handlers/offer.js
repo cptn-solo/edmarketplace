@@ -37,7 +37,10 @@ exports.offer = async event => {
                 const offers = await postAllOffersToConnection(apigwManagementApi, connectionid);
                 return { statusCode: 200, body: JSON.stringify({ offers })};
             case OFFER_METHOD_ENLIST:
-                const myOffer = await postMyOfferToConnection(apigwManagementApi, connectionid, eventBody.data.payload);
+                // 1. recall user's trace or create new one for him
+                const currentToken = await getOrCreateUserTrace(connectionid, eventBody.data.payload.token);
+                // 2. post last known user's offer back to him
+                const myOffer = await postMyOfferToConnection(apigwManagementApi, connectionid, currentToken);
                 return { statusCode: 200, body: JSON.stringify({ myOffer })};
             case OFFER_METHOD_REMOVE:
                 await shared.deleteOffer(apigwManagementApi, connectionid, true); // notify all users
@@ -57,10 +60,18 @@ exports.offer = async event => {
 };
 
 /** method handlers*/
-async function postMyOfferToConnection(apigwManagementApi, connectionId, payload) {
-    const item = await shared.getOfferByConnectionId(connectionId);
-    console.log('postMyOfferToConnection: offer' + JSON.stringify(item.Item));
-    const paiload = { myoffer: item.Item };
+async function getOrCreateUserTrace(connectionId, token) {
+    if (token.length > 0) {
+        await shared.putUserTraceTokenForConnectionId(connectionId, token);
+        return token;
+    }
+    return await shared.getUserTraceTokenByConnectionId(connectionId);
+}
+
+async function postMyOfferToConnection(apigwManagementApi, connectionId, token) {
+    const myoffer = await shared.getOfferByToken(token);
+    myoffer.connectionid = connectionId; // new connection id for object saved in earlier session
+    const paiload = { myoffer, token };
     await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(paiload) }).promise();
 }
 
