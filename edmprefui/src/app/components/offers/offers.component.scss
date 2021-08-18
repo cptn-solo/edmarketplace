@@ -1,18 +1,23 @@
 .offers-header {
     display: flex;
     margin: 8px;
+    padding: 8px;
     .left-header, .right-header {
         span {
             text-align: center;
-            width: 100%;
         }
         display: flex;
         flex-wrap: wrap;
-        flex-direction: row;
         flex: 1;
     }
+    .settings {
+        width: 60px;
+    }
     .left-header {
-        margin-right: 20px;
+        flex-direction: row-reverse;
+    }
+    .right-header {
+        flex-direction: row;
     }
 }
 .offer {
@@ -24,18 +29,18 @@
     .offer-header {
         display: flex;
         flex-flow: row;
-        .system-name, .nick-name {
+        .left-offer-info, .right-offer-info {
             flex: 1;
             line-height: 14px;
             height: 14px;
             margin: 8px 0px;
             padding: 8px 8px;
         }
-        .system-name {
+        .left-offer-info {
             color: azure;
             width: 200px;
         }
-        .nick-name {
+        .right-offer-info {
             width: 150px;
             color: lightgreen;
             text-align: right;
@@ -43,10 +48,9 @@
     }
     .offer-items {
         display: flex;
-        .demand-items, .supply-items {
+        .supply-items, .demand-items, .settings {
             display: flex;
             flex-wrap: wrap;
-            flex-direction: row;
             padding: 8px;
             @media screen and (max-width: 600px) {
                 flex-direction: column;
@@ -59,8 +63,19 @@
                 }
             }
         }
+        .supply-items {
+            flex-direction: row-reverse;
+            //margin-right: 20px;
+        }
         .demand-items {
-            margin-right: 20px;
+            flex-direction: row;
+        }
+        .supply-items, .demand-items {
+            flex-grow: 1;
+        }
+        .settings {
+            flex-grow: 0;
+            width: 60px;
         }
     }
 }
