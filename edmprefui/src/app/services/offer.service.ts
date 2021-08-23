@@ -1,17 +1,30 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { TradeItem } from '../datamodels/tradeitem';
-import { DEFAULT_USER_INFO, UserInfo } from '../datamodels/userinfo';
+import { DEFAULT_OFFER_EXPIRED_HOURS, DEFAULT_USER_INFO, Offer, UserInfo } from '../datamodels/userinfo';
 import { EdmpwsapiService } from './edmpwsapi.service';
 import { StateService } from './state.service';
 
+const OFFER_EVENT_ENLIST = "enlist";
+const OFFER_EVENT_PUBLISHOFFER = "publishoffer";
+const OFFER_EVENT_ONLINEOFFERS = "onlineoffers";
+const OFFER_EVENT_OFFLINEOFFERS = "offlineoffers"
+const OFFER_EVENT_GET = "getoffers";
+const OFFER_EVENT_DROPOFFERS = "dropoffers";
+
+const uuidv4 = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 @Injectable({
   providedIn: 'root'
 })
 export class OfferService {
   _userinfo$ = new BehaviorSubject<UserInfo>(DEFAULT_USER_INFO);
   _items$ = new BehaviorSubject<Array<TradeItem>>([]);
-  _offers$ = new BehaviorSubject<Array<UserInfo>>([]);
+  _offers$ = new BehaviorSubject<Array<Offer>>([]);
   _token$ = new BehaviorSubject<string>('');
 
   userInfo$ = this._userinfo$.asObservable();
@@ -37,7 +50,7 @@ export class OfferService {
       this.api.sendMessage(
         { "action":"offer",
           "data": {
-            "method": "enlist",
+            "method": OFFER_EVENT_ENLIST,
             "payload": {
               "token": this._token$.value
             }
@@ -45,37 +58,54 @@ export class OfferService {
         }
       );
     } else {
-      var userInfo = this._userinfo$.value;
-      userInfo.connectionid = "";
-      this.state.updateUserInfo(userInfo);
+      this.state.registerUserConnection("");
     }
   }
 
   messagesMonitor(data: any) {
     try {
       var jsonData = JSON.parse(data);
-      if (jsonData.myoffer !== undefined) {
-        // During enlist call user either gets back his sent token (saved from 1st enlist) or newly generated one
-        // if this is a 1st enlist call.
-        this.state.registerUserTraceToken(jsonData.token);
-        // enlisted, initial connection info (connection id)
-        var userInfo = this._userinfo$.value;
-        userInfo.connectionid = jsonData.myoffer.connectionId;
-        this.state.updateUserInfo(userInfo);
-        if (userInfo.published) {
-          this.publishoffer();
+      switch (jsonData.code) {
+        case OFFER_EVENT_ENLIST: { // { code: "enlist", trace, offers }
+          // During enlist call user either gets back his sent token (saved from 1st enlist) or newly generated one
+          // if this is a 1st enlist call.
+          this.state.registerUserTraceToken(jsonData.trace.token);
+          this.state.registerUserConnection(jsonData.trace.connectionId);
+          // enlisted, initial connection info (connection id)
+          if (!this.state.processUserOffer(jsonData.offers)) {
+            this.publishoffer();
+          }
+          break;
         }
-      } else if (jsonData.offer !== undefined) {
-        // incoming offer, should be processed to get matches and other usefull info
-        this.state.processInboundOffer(jsonData.offer);
-      } else if (jsonData.batch !== undefined) {
-        // incoming offers batch, should be processed to get matches and other usefull info
-        this.state.processInboundOffersBatch(jsonData.batch);
-      } else if (jsonData.dropoffer !== undefined) {
-        // some offer was dropped notification, should be processed to update offers
-        this.state.processOfferRemove(jsonData.dropoffer);
-      } else {
-        console.log(`messagesMonitor: ${data}`);
+        case OFFER_EVENT_ONLINEOFFERS: { // { code: "onlineoffers", offerIds, connectionId }
+          // mark offers online
+          this.state.processOffersConnectionId(jsonData.offerIds, jsonData.connectioinId);
+          break;
+        }
+        case OFFER_EVENT_OFFLINEOFFERS: { // { code: "offlineoffers", offerIds }
+          // mark offers offline
+          this.state.processOffersConnectionId(jsonData.offerIds, "");
+          break;
+        }
+        case OFFER_EVENT_GET: { // { code: "getoffers", batch, page, ofpages }
+          // incoming offers batch, should be processed to get matches and other usefull info
+          this.state.processInboundOffersBatch(jsonData.batch);
+          break;
+        }
+        case OFFER_EVENT_PUBLISHOFFER: { // { code: "publishoffer", offer }
+          // incoming offer, should be processed to get matches and other usefull info
+          this.state.processInboundOffer(jsonData.offer);
+          break;
+        }
+        case OFFER_EVENT_DROPOFFERS: { // { code: "dropoffers", offerIds }
+          // some offer was dropped notification, should be processed to update offers
+          this.state.processRemoveOffers(jsonData.offerIds);
+          break;
+        }
+        default: {
+          console.log(`messagesMonitor: ${data}`);
+          break;
+        }
       }
     } catch (error) {
       console.log(`ERROR: messagesMonitor: unknown message: ${data}`);
@@ -153,19 +183,23 @@ export class OfferService {
   getoffers() {
     this.state.prepareOffersBatchProcessing();
     this.api.sendMessage(
-      { "action":"offer",
+      { "action": "offer",
         "data": {
-          "method": "getoffers"
+          "method": OFFER_EVENT_GET
         }
       }
     );
   }
 
   unpublishoffer() {
+    const userInfo = this._userinfo$.value;
     this.api.sendMessage(
-      { "action":"offer",
+      { "action": "offer",
         "data": {
-          "method": "removeoffer"
+          "method": OFFER_EVENT_DROPOFFERS,
+          "payload": {
+            "offerIds": [userInfo.offerId]
+          }
         }
       }
     );
@@ -174,12 +208,21 @@ export class OfferService {
   }
 
   publishoffer() {
-    var publish = Object.assign({}, this._userinfo$.value);
-    publish.contactinfo = "";
+    const userInfo = this._userinfo$.value;
+    var publish = {
+      offerId: uuidv4(),
+      info: {
+        nickname: userInfo.nickname,
+        location: userInfo.location
+      },
+      items: userInfo.items,
+      created: new Date().getTime(),
+      expired: new Date().getTime() + 1000*60*60*DEFAULT_OFFER_EXPIRED_HOURS
+    } as Offer;
     this.api.sendMessage(
-      { "action":"offer",
+      { "action": "offer",
         "data":
-          { "method":"publishoffer",
+          { "method": OFFER_EVENT_PUBLISHOFFER,
             "payload": publish
           }
       }

@@ -15,7 +15,7 @@
     </div>
     <div *ngFor="let offer of filteredOffers" class="offer">
         <div class="offer-header">
-            <div class="left-offer-info">{{offer.location}} : {{offer.nickname}}</div>
+            <div class="left-offer-info">{{offer.info.location}} : {{offer.info.nickname}}</div>
             <div class="right-offer-info"></div>
         </div>
         <div *ngFor="let item of offer.items" class="offer-items">

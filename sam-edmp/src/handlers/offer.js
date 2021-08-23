@@ -1,17 +1,6 @@
 const AWS = require('aws-sdk');
 const shared = require('../shared/shared.js');
 
-const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: process.env.AWS_REGION });
-
-const { TABLE_NAME } = process.env;
-
-const OFFER_METHOD_PUBLISH = "publishoffer";
-const OFFER_METHOD_GET = "getoffers";
-const OFFER_METHOD_REMOVE = "removeoffer";
-const OFFER_METHOD_ENLIST = "enlist";
-// debug: remove later:
-const OFFER_METHOD_READ = "readoffers";
-
 const BROADCAST_BATCH_SIZE = 20; // offers per broadcast
 
 exports.offer = async event => {
@@ -27,31 +16,33 @@ exports.offer = async event => {
 
         // switch method being called
         switch (eventBody.data.method) {
-            case OFFER_METHOD_PUBLISH:
+            case shared.OFFER_METHOD_ENLIST: {
+                // 1. recall user's trace or create new one for him
+                const trace = await getOrCreateUserTrace(connectionid, eventBody.data.payload.token);
+                // 2. post last known user's offer back to him
+                const offers = await postEnlistResponce(apigwManagementApi, trace);
+                // 3. post notify connected users on offer went online
+                await broadcastOfferWentOnline(apigwManagementApi, trace);
+                return { statusCode: 200, body: JSON.stringify({ trace, offers })};
+            }
+            case shared.OFFER_METHOD_PUBLISH: {
                 // 1. store new/updated offer data
-                const partyOffer = await publishOffer(connectionid, eventBody.data.payload);
+                const offer = await publishOffer(connectionid, eventBody.data.payload);
                 // 2. broadcast this offer to all connected users
-                await postOfferToAllConnections(apigwManagementApi, partyOffer);
+                await broadcastOffer(apigwManagementApi, offer);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
-            case OFFER_METHOD_GET:
+            }
+            case shared.OFFER_METHOD_GET: {
                 const offers = await postAllOffersToConnection(apigwManagementApi, connectionid);
                 return { statusCode: 200, body: JSON.stringify({ offers })};
-            case OFFER_METHOD_ENLIST:
-                // 1. recall user's trace or create new one for him
-                const currentToken = await getOrCreateUserTrace(connectionid, eventBody.data.payload.token);
-                // 2. post last known user's offer back to him
-                const myOffer = await postMyOfferToConnection(apigwManagementApi, connectionid, currentToken);
-                return { statusCode: 200, body: JSON.stringify({ myOffer })};
-            case OFFER_METHOD_REMOVE:
-                await shared.deleteOffer(apigwManagementApi, connectionid, true); // notify all users
+            }
+            case shared.OFFER_METHOD_REMOVE: {
+                await shared.deleteOffers(apigwManagementApi, connectionid, eventBody.data.payload.offerIds, true); // notify all users
                 return { statusCode: 200, body: JSON.stringify({})};
-            case OFFER_METHOD_READ:
-                const connections = await ddb.scan({ TableName: TABLE_NAME }).promise();
-                const message = JSON.stringify(connections);
-                console.log('connections: ' + message);
-                return { statusCode: 200, body: message };
-            default:
+            }
+            default: {
                 return { statusCode: 500, body: eventBody.data.method + ' method not supported' };
+            }
         }
     } catch (e) {
         console.log('failed request body: ' + event.body + ' stack: ' + JSON.stringify(e));
@@ -61,48 +52,64 @@ exports.offer = async event => {
 
 /** method handlers*/
 async function getOrCreateUserTrace(connectionId, token) {
+    var connection = await shared.getConnection(connectionId);
+    var _trace = null;
+    var _token = token.length > 0 ? token : connection.token;
+    var _offers = [];
     if (token.length > 0) {
-        await shared.putUserTraceTokenForConnectionId(connectionId, token);
-        return token;
+        connection.token = _token;
+        await shared.putConnection(connection);
     }
-    return await shared.getUserTraceTokenByConnectionId(connectionId);
+    _trace = await shared.getTrace(_token);
+
+    if (_trace) {
+        _offers = _trace.offers??[];
+    }
+    _trace = await shared.putTrace({ connectionId, token: _token, offers: _offers });
+    return _trace;
 }
 
-async function postMyOfferToConnection(apigwManagementApi, connectionId, token) {
-    const myoffer = await shared.getOfferByToken(token);
-    myoffer.connectionid = connectionId; // new connection id for object saved in earlier session
-    const paiload = { myoffer, token };
-    await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(paiload) }).promise();
+async function postEnlistResponce(apigwManagementApi, trace) {
+    const offers = await shared.getOffersByIds(trace.offers);
+    const payload = { code: shared.OFFER_METHOD_ENLIST, trace, offers };
+    await apigwManagementApi.postToConnection({ ConnectionId: trace.connectionId, Data: JSON.stringify(payload) }).promise();
+    return offers;
+}
+
+async function broadcastOfferWentOnline(apigwManagementApi, trace) {
+    shared.broadcastOffersOffline(apigwManagementApi, trace.offers, trace.connectionId);
 }
 
 async function postAllOffersToConnection(apigwManagementApi, connectionId) {
-    const connections = await ddb.scan({ TableName: TABLE_NAME }).promise();
-    var offers = connections.Items.filter(c => !!c.offer);
+    const offers = await shared.getValidPublicOffers();
+    console.log('offers: ' + JSON.stringify(offers));
     var page = 0;
     var ofpages = parseInt(offers.length / BROADCAST_BATCH_SIZE) + ((offers.length % BROADCAST_BATCH_SIZE) ? 1 : 0);
     var postcalls = [];
-    while(offers.length > 0) {
+    while (offers.length > 0) {
         const batch = offers.splice(0, BROADCAST_BATCH_SIZE);
-        const payload = { batch, page, ofpages };
+        const payload = {
+                code: shared.OFFER_METHOD_GET,
+                batch, page, ofpages };
         postcalls.push(payload);
         page ++;
     }
-    await shared.broadcastPostCalls(postcalls.map(async (batch) => {
-        await postOfferToConnection(apigwManagementApi, connectionId, batch);
+    await shared.broadcastPostCalls(postcalls.map(async (payload) => {
+        await postOfferToConnection(apigwManagementApi, connectionId, payload);
     }));
     return offers;
 }
 
-async function postOfferToConnection(apigwManagementApi, connectionId, partyOffer) {
+async function postOfferToConnection(apigwManagementApi, connectionId, payload) {
     try {
-        await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(partyOffer) }).promise();
+        await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) }).promise();
     } catch (e) {
         if (e.statusCode === 410) {
             console.log(`Found stale connection, deleting ${connectionId}`);
-            await shared.delist(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
+            await shared.offline(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
         } else if (e.statusCode === 400) {
             console.log(`Found invalid connection, deleting ${connectionId}`);
-            await shared.delist(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
+            await shared.offline(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
         } else {
             console.log('postOfferToConnection: ' + JSON.stringify(e));
             throw e;
@@ -110,30 +117,36 @@ async function postOfferToConnection(apigwManagementApi, connectionId, partyOffe
     }
 }
 
-async function postOfferToAllConnections(apigwManagementApi, partyOffer) {
+async function broadcastOffer(apigwManagementApi, offer) {
     const connections = await shared.getCurrentConnectionIds();
     await shared.broadcastPostCalls(connections.Items.map(async ({ connectionId }) => {
-        await postOfferToConnection(apigwManagementApi, connectionId, partyOffer);
+        try {
+            const payload = {
+                code: shared.OFFER_METHOD_PUBLISH,
+                offer: Object.assign(offer, { token: ""})
+            };
+            await postOfferToConnection(apigwManagementApi, connectionId, payload);
+        } catch (e) {
+            // skip
+        }
     }));
 }
 
-async function publishOffer(connectionId, offerData) {
-    const partyOffer = {
-        connectionId: connectionId,
-        offer: offerData
-    }
-
-    const putParams = {
-        TableName: process.env.TABLE_NAME,
-        Item: partyOffer
-    };
-
+async function publishOffer(connectionId, offer) {
     try {
-        await ddb.put(putParams).promise();
+        const connection = await shared.getConnection(connectionId);
+        console.log('connection: ' + JSON.stringify(connection));
+        const trace = await shared.getTrace(connection.token);
+        console.log('trace: ' + JSON.stringify(trace));
+        const _offer = Object.assign({
+            connectionId: connectionId,
+            token: trace.token
+        }, offer);
+        await shared.putOffer(_offer);
+        return _offer;
     } catch (e) {
-        console.log('publishOffer: ' + JSON.stringify(e));
+        console.log('publishOffer failed: ' + JSON.stringify(e));
         throw e;
     }
 
-    return partyOffer;
 }
