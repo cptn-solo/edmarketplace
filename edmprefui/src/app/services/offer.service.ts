@@ -79,7 +79,7 @@ export class OfferService {
         }
         case OFFER_EVENT_ONLINEOFFERS: { // { code: "onlineoffers", offerIds, connectionId }
           // mark offers online
-          this.state.processOffersConnectionId(jsonData.offerIds, jsonData.connectioinId);
+          this.state.processOffersConnectionId(jsonData.offerIds, jsonData.connectionId);
           break;
         }
         case OFFER_EVENT_OFFLINEOFFERS: { // { code: "offlineoffers", offerIds }
@@ -209,15 +209,20 @@ export class OfferService {
 
   publishoffer() {
     const userInfo = this._userinfo$.value;
+    if (userInfo.offerId === "") {
+      userInfo.offerId = uuidv4();
+    }
+    userInfo.created = new Date().getTime();
+    userInfo.expired = userInfo.created + 1000*60*60*DEFAULT_OFFER_EXPIRED_HOURS;
     var publish = {
-      offerId: uuidv4(),
+      offerId: userInfo.offerId,
       info: {
         nickname: userInfo.nickname,
         location: userInfo.location
       },
       items: userInfo.items,
-      created: new Date().getTime(),
-      expired: new Date().getTime() + 1000*60*60*DEFAULT_OFFER_EXPIRED_HOURS
+      created: userInfo.created,
+      expired: userInfo.expired
     } as Offer;
     this.api.sendMessage(
       { "action": "offer",
@@ -227,6 +232,7 @@ export class OfferService {
           }
       }
     );
+    this._userinfo$.next(userInfo);
     this.updateChangedState(false);
     this.updatePublishedState(true);
   }

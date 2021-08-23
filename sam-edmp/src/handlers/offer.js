@@ -61,7 +61,6 @@ async function getOrCreateUserTrace(connectionId, token) {
         await shared.putConnection(connection);
     }
     _trace = await shared.getTrace(_token);
-
     if (_trace) {
         _offers = _trace.offers??[];
     }
@@ -77,12 +76,11 @@ async function postEnlistResponce(apigwManagementApi, trace) {
 }
 
 async function broadcastOfferWentOnline(apigwManagementApi, trace) {
-    shared.broadcastOffersOffline(apigwManagementApi, trace.offers, trace.connectionId);
+    await shared.broadcastOffersOnline(apigwManagementApi, trace.offers, trace.connectionId);
 }
 
 async function postAllOffersToConnection(apigwManagementApi, connectionId) {
     const offers = await shared.getValidPublicOffers();
-    console.log('offers: ' + JSON.stringify(offers));
     var page = 0;
     var ofpages = parseInt(offers.length / BROADCAST_BATCH_SIZE) + ((offers.length % BROADCAST_BATCH_SIZE) ? 1 : 0);
     var postcalls = [];
@@ -118,7 +116,7 @@ async function postOfferToConnection(apigwManagementApi, connectionId, payload) 
 }
 
 async function broadcastOffer(apigwManagementApi, offer) {
-    const connections = await shared.getCurrentConnectionIds();
+    const connections = await shared.getConnections();
     await shared.broadcastPostCalls(connections.Items.map(async ({ connectionId }) => {
         try {
             const payload = {
@@ -135,14 +133,17 @@ async function broadcastOffer(apigwManagementApi, offer) {
 async function publishOffer(connectionId, offer) {
     try {
         const connection = await shared.getConnection(connectionId);
-        console.log('connection: ' + JSON.stringify(connection));
         const trace = await shared.getTrace(connection.token);
-        console.log('trace: ' + JSON.stringify(trace));
         const _offer = Object.assign({
             connectionId: connectionId,
             token: trace.token
         }, offer);
         await shared.putOffer(_offer);
+        const idx = trace.offers.findIndex(f => f === offer.offerId);
+        if (idx < 0) {
+            trace.offers.push(offer.offerId);
+            await shared.putTrace(trace);
+        }
         return _offer;
     } catch (e) {
         console.log('publishOffer failed: ' + JSON.stringify(e));

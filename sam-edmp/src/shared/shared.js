@@ -38,11 +38,12 @@ exports.getConnection = async (connectionId) => {
 
 exports.putConnection = async (connection) => {
     const params = {
-        TableName: process.env.TRACE_TABLE_NAME,
+        TableName: process.env.CONN_TABLE_NAME,
         Item: connection
     };
     try {
         await ddb.put(params).promise();
+        console.log('putConnection: ' + JSON.stringify(params));
     } catch (e) {
         console.log('putConnection failed: ' + JSON.stringify(e));
         throw e;
@@ -56,6 +57,7 @@ exports.getTrace = async (token) => {
         Key: { token },
         TableName: process.env.TRACE_TABLE_NAME
     };
+    console.log('getTrace'+JSON.stringify(params));
     try {
         var result = await ddb.get(params).promise();
         return result.Item
@@ -126,7 +128,8 @@ exports.getValidPublicOffers = async () => {
 };
 
 exports.getOffersByIds = async (offerIds) => {
-    var offers = (offerIds ?? []).map(async id => await this.getOffer(id));
+    var getCalls = (offerIds ?? []).map(async id => await this.getOffer(id));
+    const offers = await Promise.all(getCalls);
     return offers;
 };
 
@@ -234,8 +237,12 @@ exports.deleteOffers = async (apigwManagementApi, connectionId, offerIds, notify
 
 exports.offline = async (apigwManagementApi, connectionId, notify) => {
     const connection = await this.getConnection(connectionId);
+    console.log('connection: '+JSON.stringify(connection));
     const trace = await this.getTrace(connection.token);
+    console.log('trace: '+JSON.stringify(trace));
     const offers = await this.getOffersByIds(trace.offers);
+    console.log('offers: '+JSON.stringify(offers));
+
     try {
         trace.connectionId = "";
         await ddb.put({ TableName: process.env.TRACE_TABLE_NAME, Item: trace }).promise();

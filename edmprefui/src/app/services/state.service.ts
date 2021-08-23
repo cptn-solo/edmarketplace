@@ -60,6 +60,7 @@ export class StateService {
       var idxExisting = offers.findIndex(o => o.offerId === offerId);
       if (idxExisting >= 0) {
         offers[idxExisting].connectionId = connectionId;
+        console.log('processOffersConnectionState: '+offerId+' conn: '+connectionId);
       }
     });
     this._offers$.next(offers);
