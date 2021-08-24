@@ -87,9 +87,9 @@ export class OfferService {
           this.state.processOffersConnectionId(jsonData.offerIds, "");
           break;
         }
-        case OFFER_EVENT_GET: { // { code: "getoffers", batch, page, ofpages }
+        case OFFER_EVENT_GET: { // { code: "getoffers", offers, page, ofpages }
           // incoming offers batch, should be processed to get matches and other usefull info
-          this.state.processInboundOffersBatch(jsonData.batch);
+          this.state.processInboundOffersBatch(jsonData.offers);
           break;
         }
         case OFFER_EVENT_PUBLISHOFFER: { // { code: "publishoffer", offer }

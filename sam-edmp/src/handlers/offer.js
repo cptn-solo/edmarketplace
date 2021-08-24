@@ -88,7 +88,7 @@ async function postAllOffersToConnection(apigwManagementApi, connectionId) {
         const batch = offers.splice(0, BROADCAST_BATCH_SIZE);
         const payload = {
                 code: shared.OFFER_METHOD_GET,
-                batch, page, ofpages };
+                offers: batch, page, ofpages };
         postcalls.push(payload);
         page ++;
     }

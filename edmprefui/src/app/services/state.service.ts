@@ -90,16 +90,16 @@ export class StateService {
     this._getoffersReset = true;
   }
 
-  processInboundOffersBatch(batch: Array<Offer>) {
-    var offers = this._offers$.value;
+  processInboundOffersBatch(offers: Array<Offer>) {
+    var _offers = this._offers$.value;
     if (this._getoffersReset) { // flag toggled on getoffers request and resetted upon 1st batch processing
-      offers = [];
+      _offers = [];
       this._getoffersReset = false;
     }
-    batch.forEach(offer => {
-      this.processOneInboundOffer(offer, offers);
+    offers.forEach(offer => {
+      this.processOneInboundOffer(offer, _offers);
     });
-    this._offers$.next(offers);
+    this._offers$.next(_offers);
   }
 
   processInboundOffer(offer: Offer) {
