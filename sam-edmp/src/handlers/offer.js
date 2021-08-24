@@ -93,26 +93,9 @@ async function postAllOffersToConnection(apigwManagementApi, connectionId) {
         page ++;
     }
     await shared.broadcastPostCalls(postcalls.map(async (payload) => {
-        await postOfferToConnection(apigwManagementApi, connectionId, payload);
+        await shared.postToConnection(apigwManagementApi, connectionId, payload);
     }));
     return offers;
-}
-
-async function postOfferToConnection(apigwManagementApi, connectionId, payload) {
-    try {
-        await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) }).promise();
-    } catch (e) {
-        if (e.statusCode === 410) {
-            console.log(`Found stale connection, deleting ${connectionId}`);
-            await shared.offline(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
-        } else if (e.statusCode === 400) {
-            console.log(`Found invalid connection, deleting ${connectionId}`);
-            await shared.offline(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
-        } else {
-            console.log('postOfferToConnection: ' + JSON.stringify(e));
-            throw e;
-        }
-    }
 }
 
 async function broadcastOffer(apigwManagementApi, offer) {
@@ -123,7 +106,7 @@ async function broadcastOffer(apigwManagementApi, offer) {
                 code: shared.OFFER_METHOD_PUBLISH,
                 offer: Object.assign(offer, { token: ""})
             };
-            await postOfferToConnection(apigwManagementApi, connectionId, payload);
+            await shared.postToConnection(apigwManagementApi, connectionId, payload);
         } catch (e) {
             // skip
         }

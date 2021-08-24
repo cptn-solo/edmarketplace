@@ -38,11 +38,12 @@ exports.getConnection = async (connectionId) => {
 
 exports.putConnection = async (connection) => {
     const params = {
-        TableName: process.env.TRACE_TABLE_NAME,
+        TableName: process.env.CONN_TABLE_NAME,
         Item: connection
     };
     try {
         await ddb.put(params).promise();
+        console.log('putConnection: ' + JSON.stringify(params));
     } catch (e) {
         console.log('putConnection failed: ' + JSON.stringify(e));
         throw e;
@@ -56,6 +57,7 @@ exports.getTrace = async (token) => {
         Key: { token },
         TableName: process.env.TRACE_TABLE_NAME
     };
+    console.log('getTrace'+JSON.stringify(params));
     try {
         var result = await ddb.get(params).promise();
         return result.Item
@@ -111,9 +113,10 @@ exports.getValidPublicOffers = async () => {
         TableName: process.env.OFFER_TABLE_NAME
     };
     try {
-        var result = await ddb.get(params).promise();
+        var result = await ddb.scan(params).promise();
         if (result.Items) {
-            var offers = result.Items.filter(c => c.expired >= new Date().getTime());
+            var today = new Date().getTime();
+            var offers = result.Items.filter(c => c.expired >= today);
             // remove non-public data:
             offers = offers.map(offer => Object.assign(offer, { token: "" }));
             return offers;
@@ -125,7 +128,8 @@ exports.getValidPublicOffers = async () => {
 };
 
 exports.getOffersByIds = async (offerIds) => {
-    var offers = (offerIds ?? []).map(async id => await this.getOffer(id));
+    var getCalls = (offerIds ?? []).map(async id => await this.getOffer(id));
+    const offers = await Promise.all(getCalls);
     return offers;
 };
 
@@ -137,7 +141,7 @@ exports.getOffersByToken = async (token) => {
     try {
         var result = await ddb.get(params).promise();
         if (result.Item) {
-            var offers = this.getOffersByIds(result.Item.offers);
+            var offers = await this.getOffersByIds(result.Item.offers);
             return offers;
         }
         return [];
@@ -201,11 +205,10 @@ exports.broadcastOffersOnline = async (apigwManagementApi, offerIds, ownerConnec
 exports.deleteOffers = async (apigwManagementApi, connectionId, offerIds, notify) => {
 
     try {
-        const connection = this.getConnection(connectionId);
-        const trace = this.getTrace(offer.token);
-
-        offerIds.forEach(offerId => {
-            const offer  = this.getOffer(offerId);
+        const connection = await this.getConnection(connectionId);
+        const trace = await this.getTrace(connection.token);
+        var delCalls = offerIds.map(async offerId => {
+            const offer  = await this.getOffer(offerId);
             if (offer.token !== connection.token || connection.token !== trace.token) return;
 
             const params = {
@@ -218,6 +221,9 @@ exports.deleteOffers = async (apigwManagementApi, connectionId, offerIds, notify
             const delIdx = trace.offers.findIndex(f => f === offerId);
             trace.offers.splice(delIdx, 1);
         });
+
+        await Promise.all(delCalls);
+
         this.putTrace(trace);
 
         if (notify) {
@@ -230,16 +236,21 @@ exports.deleteOffers = async (apigwManagementApi, connectionId, offerIds, notify
 };
 
 exports.offline = async (apigwManagementApi, connectionId, notify) => {
-    const connection = this.getConnection(connectionId);
-    const trace = this.getTrace(connection.token);
-    const offers = this.getOffersByIds(trace.offers);
+    const connection = await this.getConnection(connectionId);
+    console.log('connection: '+JSON.stringify(connection));
+    const trace = await this.getTrace(connection.token);
+    console.log('trace: '+JSON.stringify(trace));
+    const offers = await this.getOffersByIds(trace.offers);
+    console.log('offers: '+JSON.stringify(offers));
+
     try {
         trace.connectionId = "";
         await ddb.put({ TableName: process.env.TRACE_TABLE_NAME, Item: trace }).promise();
-        offers.forEach(offer => {
-            offer.connectionId = ""
+        var putCalls = offers.map(async offer => {
+            offer.connectionId = "";
             await ddb.put({ TableName: process.env.OFFER_TABLE_NAME, Item: offer }).promise();
         });
+        await Promise.all(putCalls);
         await ddb.delete({ TableName: process.env.CONN_TABLE_NAME, Key: { connectionId } }).promise();
         if (notify) {
             await this.broadcastOffersOffline(apigwManagementApi, trace.offers);

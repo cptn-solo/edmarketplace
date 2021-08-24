@@ -1,7 +1,7 @@
 {
     "requestContext": {
       "connectionId": "D7LFmcYrliACFvQ=",
-      "domainName": "a92b4q6td8.execute-api.eu-central-1.amazonaws.com",
+      "domainName": "fmchr7d4ea.execute-api.eu-central-1.amazonaws.com",
       "stage": "Prod"
     },
     "body": "{\"data\":{\"method\":\"enlist\",\"payload\":{\"token\":\"5e3994b7-8ba9-42f0-af86-eba0a5c0e69b\"}}}"

@@ -9,6 +9,12 @@ exports.OFFER_METHOD_REMOVE = "dropoffers";
 exports.OFFER_EVENT_ONLINE = "onlineoffers";
 exports.OFFER_EVENT_OFFLINE = "offlineoffers";
 
+exports.COMMS_METHOD_BIDPUSH = "bidpush";
+exports.COMMS_METHOD_BIDPULL = "bidpull";
+exports.COMMS_METHOD_BIDACCEPT = "bidaccept";
+exports.COMMS_METHOD_MESSAGE = "message";
+
+
 /** utilities */
 exports.getConnections = async () => {
     const params = {
@@ -159,6 +165,25 @@ exports.broadcastPostCalls = async (postCalls) => {
         throw e;
     }
 };
+
+exports.postToConnection = async (apigwManagementApi, connectionId, payload) => {
+    try {
+        await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) }).promise();
+    } catch (e) {
+
+        if (e.statusCode === 410) {
+            console.log(`Found stale connection, deleting ${connectionId}`);
+            await this.offline(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
+        } else if (e.statusCode === 400) {
+            console.log(`Found invalid connection, deleting ${connectionId}`);
+            await this.offline(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
+        } else {
+            console.log('postToConnection: ' + JSON.stringify(e));
+            throw e;
+        }
+    }
+};
+
 
 /** method handlers */
 exports.broadcastOffersDelete = async (apigwManagementApi, offerIds) => {
