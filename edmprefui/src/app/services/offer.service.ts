@@ -1,21 +1,36 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { TradeItem } from '../datamodels/tradeitem';
-import { DEFAULT_USER_INFO, UserInfo } from '../datamodels/userinfo';
+import { DEFAULT_OFFER_EXPIRED_HOURS, DEFAULT_USER_INFO, Offer, UserInfo } from '../datamodels/userinfo';
 import { EdmpwsapiService } from './edmpwsapi.service';
 import { StateService } from './state.service';
 
+const OFFER_EVENT_ENLIST = "enlist";
+const OFFER_EVENT_PUBLISHOFFER = "publishoffer";
+const OFFER_EVENT_ONLINEOFFERS = "onlineoffers";
+const OFFER_EVENT_OFFLINEOFFERS = "offlineoffers"
+const OFFER_EVENT_GET = "getoffers";
+const OFFER_EVENT_DROPOFFERS = "dropoffers";
+
+const uuidv4 = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 @Injectable({
   providedIn: 'root'
 })
 export class OfferService {
   _userinfo$ = new BehaviorSubject<UserInfo>(DEFAULT_USER_INFO);
   _items$ = new BehaviorSubject<Array<TradeItem>>([]);
-  _offers$ = new BehaviorSubject<Array<UserInfo>>([]);
+  _offers$ = new BehaviorSubject<Array<Offer>>([]);
+  _token$ = new BehaviorSubject<string>('');
 
   userInfo$ = this._userinfo$.asObservable();
   items$ = this._items$.asObservable();
   offers$ = this._offers$.asObservable();
+  token$ = this._token$.asObservable();
 
   constructor(
     private api: EdmpwsapiService,
@@ -24,13 +39,10 @@ export class OfferService {
       this._items$.next(info.items as Array<TradeItem>);
       this._userinfo$.next(info);
     });
-    this.state.offers$.subscribe(offers => {
-      this._offers$.next(offers);
-    });
-    this.api.connected$
-      .subscribe(val => this.connectionMonitor(val));
-    this.api.messages$
-      .subscribe(data => this.messagesMonitor(data));
+    this.state.offers$.subscribe(offers => this._offers$.next(offers));
+    this.state.traceToken$.subscribe(token => this._token$.next(token));
+    this.api.connected$.subscribe(val => this.connectionMonitor(val));
+    this.api.messages$.subscribe(data => this.messagesMonitor(data));
   }
 
   connectionMonitor(connected: boolean){
@@ -38,39 +50,62 @@ export class OfferService {
       this.api.sendMessage(
         { "action":"offer",
           "data": {
-            "method": "enlist"
+            "method": OFFER_EVENT_ENLIST,
+            "payload": {
+              "token": this._token$.value
+            }
           }
         }
       );
     } else {
-      var userInfo = this._userinfo$.value;
-      userInfo.connectionid = "";
-      this.state.updateUserInfo(userInfo);
+      this.state.registerUserConnection("");
     }
   }
 
   messagesMonitor(data: any) {
     try {
       var jsonData = JSON.parse(data);
-      if (jsonData.myoffer !== undefined) {
-        // enlisted, initial connection info (connection id)
-        var userInfo = this._userinfo$.value;
-        userInfo.connectionid = jsonData.myoffer.connectionId;
-        this.state.updateUserInfo(userInfo);
-        if (userInfo.published) {
-          this.publishoffer();
+      switch (jsonData.code) {
+        case OFFER_EVENT_ENLIST: { // { code: "enlist", trace, offers }
+          // During enlist call user either gets back his sent token (saved from 1st enlist) or newly generated one
+          // if this is a 1st enlist call.
+          this.state.registerUserTraceToken(jsonData.trace.token);
+          this.state.registerUserConnection(jsonData.trace.connectionId);
+          // enlisted, initial connection info (connection id)
+          if (!this.state.processUserOffer(jsonData.offers)) {
+            this.publishoffer();
+          }
+          break;
         }
-      } else if (jsonData.offer !== undefined) {
-        // incoming offer, should be processed to get matches and other usefull info
-        this.state.processInboundOffer(jsonData.offer);
-      } else if (jsonData.batch !== undefined) {
-        // incoming offers batch, should be processed to get matches and other usefull info
-        this.state.processInboundOffersBatch(jsonData.batch);
-      } else if (jsonData.dropoffer !== undefined) {
-        // some offer was dropped notification, should be processed to update offers
-        this.state.processOfferRemove(jsonData.dropoffer);
-      } else {
-        console.log(`messagesMonitor: ${data}`);
+        case OFFER_EVENT_ONLINEOFFERS: { // { code: "onlineoffers", offerIds, connectionId }
+          // mark offers online
+          this.state.processOffersConnectionId(jsonData.offerIds, jsonData.connectionId);
+          break;
+        }
+        case OFFER_EVENT_OFFLINEOFFERS: { // { code: "offlineoffers", offerIds }
+          // mark offers offline
+          this.state.processOffersConnectionId(jsonData.offerIds, "");
+          break;
+        }
+        case OFFER_EVENT_GET: { // { code: "getoffers", offers, page, ofpages }
+          // incoming offers batch, should be processed to get matches and other usefull info
+          this.state.processInboundOffersBatch(jsonData.offers);
+          break;
+        }
+        case OFFER_EVENT_PUBLISHOFFER: { // { code: "publishoffer", offer }
+          // incoming offer, should be processed to get matches and other usefull info
+          this.state.processInboundOffer(jsonData.offer);
+          break;
+        }
+        case OFFER_EVENT_DROPOFFERS: { // { code: "dropoffers", offerIds }
+          // some offer was dropped notification, should be processed to update offers
+          this.state.processRemoveOffers(jsonData.offerIds);
+          break;
+        }
+        default: {
+          console.log(`messagesMonitor: ${data}`);
+          break;
+        }
       }
     } catch (error) {
       console.log(`ERROR: messagesMonitor: unknown message: ${data}`);
@@ -148,19 +183,23 @@ export class OfferService {
   getoffers() {
     this.state.prepareOffersBatchProcessing();
     this.api.sendMessage(
-      { "action":"offer",
+      { "action": "offer",
         "data": {
-          "method": "getoffers"
+          "method": OFFER_EVENT_GET
         }
       }
     );
   }
 
   unpublishoffer() {
+    const userInfo = this._userinfo$.value;
     this.api.sendMessage(
-      { "action":"offer",
+      { "action": "offer",
         "data": {
-          "method": "removeoffer"
+          "method": OFFER_EVENT_DROPOFFERS,
+          "payload": {
+            "offerIds": [userInfo.offerId]
+          }
         }
       }
     );
@@ -169,16 +208,31 @@ export class OfferService {
   }
 
   publishoffer() {
-    var publish = Object.assign({}, this._userinfo$.value);
-    publish.contactinfo = "";
+    const userInfo = this._userinfo$.value;
+    if (userInfo.offerId === "") {
+      userInfo.offerId = uuidv4();
+    }
+    userInfo.created = new Date().getTime();
+    userInfo.expired = userInfo.created + 1000*60*60*DEFAULT_OFFER_EXPIRED_HOURS;
+    var publish = {
+      offerId: userInfo.offerId,
+      info: {
+        nickname: userInfo.nickname,
+        location: userInfo.location
+      },
+      items: userInfo.items,
+      created: userInfo.created,
+      expired: userInfo.expired
+    } as Offer;
     this.api.sendMessage(
-      { "action":"offer",
+      { "action": "offer",
         "data":
-          { "method":"publishoffer",
+          { "method": OFFER_EVENT_PUBLISHOFFER,
             "payload": publish
           }
       }
     );
+    this._userinfo$.next(userInfo);
     this.updateChangedState(false);
     this.updatePublishedState(true);
   }

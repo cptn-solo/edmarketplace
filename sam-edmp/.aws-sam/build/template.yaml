@@ -3,9 +3,29 @@ Description: sam-edmp
 Transform:
 - AWS::Serverless-2016-10-31
 Parameters:
-  TableName:
+  ConnTableName:
     Type: String
     Default: connections
+    Description: (Required) The name of the new DynamoDB to store connection information.
+      Minimum 3 characters
+    MinLength: 3
+    MaxLength: 50
+    AllowedPattern: ^[A-Za-z_]+$
+    ConstraintDescription: Required. Can be characters and underscore only. No numbers
+      or special characters allowed.
+  TraceTableName:
+    Type: String
+    Default: traces
+    Description: (Required) The name of the new DynamoDB to store user trace information.
+      Minimum 3 characters
+    MinLength: 3
+    MaxLength: 50
+    AllowedPattern: ^[A-Za-z_]+$
+    ConstraintDescription: Required. Can be characters and underscore only. No numbers
+      or special characters allowed.
+  OfferTableName:
+    Type: String
+    Default: offers
     Description: (Required) The name of the new DynamoDB to store trade information.
       Minimum 3 characters
     MinLength: 3
@@ -86,11 +106,34 @@ Resources:
       IntegrationType: AWS_PROXY
       IntegrationUri:
         Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OfferFunction.Arn}/invocations
+  CommsRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId:
+        Ref: EDMarketplaceSocket
+      RouteKey: comms
+      AuthorizationType: NONE
+      OperationName: CommsRoute
+      Target:
+        Fn::Join:
+        - /
+        - - integrations
+          - Ref: CommsInteg
+  CommsInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId:
+        Ref: EDMarketplaceSocket
+      Description: Comms Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CommsFunction.Arn}/invocations
   Deployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
     - ConnectRoute
     - OfferRoute
+    - CommsRoute
     - DisconnectRoute
     Properties:
       ApiId:
@@ -119,7 +162,39 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       TableName:
-        Ref: TableName
+        Ref: ConnTableName
+  TracesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: token
+        AttributeType: S
+      KeySchema:
+      - AttributeName: token
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
+      SSESpecification:
+        SSEEnabled: true
+      TableName:
+        Ref: TraceTableName
+  OffersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: offerId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: offerId
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
+      SSESpecification:
+        SSEEnabled: true
+      TableName:
+        Ref: OfferTableName
   OnConnectFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -130,12 +205,12 @@ Resources:
       Description: A Lambda function that handles connection of a user.
       Environment:
         Variables:
-          TABLE_NAME:
-            Ref: TableName
+          CONN_TABLE_NAME:
+            Ref: ConnTableName
       Policies:
       - DynamoDBCrudPolicy:
           TableName:
-            Ref: TableName
+            Ref: ConnTableName
       - Statement:
         - Effect: Allow
           Action:
@@ -162,12 +237,18 @@ Resources:
       Description: A Lambda function that handles disconnection of a user.
       Environment:
         Variables:
-          TABLE_NAME:
-            Ref: TableName
+          CONN_TABLE_NAME:
+            Ref: ConnTableName
       Policies:
       - DynamoDBCrudPolicy:
           TableName:
-            Ref: TableName
+            Ref: ConnTableName
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TraceTableName
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: OfferTableName
       - Statement:
         - Effect: Allow
           Action:
@@ -195,12 +276,22 @@ Resources:
         get list, remove).
       Environment:
         Variables:
-          TABLE_NAME:
-            Ref: TableName
+          CONN_TABLE_NAME:
+            Ref: ConnTableName
+          TRACE_TABLE_NAME:
+            Ref: TraceTableName
+          OFFER_TABLE_NAME:
+            Ref: OfferTableName
       Policies:
       - DynamoDBCrudPolicy:
           TableName:
-            Ref: TableName
+            Ref: ConnTableName
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TraceTableName
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: OfferTableName
       - Statement:
         - Effect: Allow
           Action:
@@ -217,23 +308,67 @@ Resources:
       FunctionName:
         Ref: OfferFunction
       Principal: apigateway.amazonaws.com
-  helloFromLambdaFunction:
+  CommsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/hello-from-lambda.helloFromLambdaHandler
+      Handler: src/handlers/comms.comms
+      MemorySize: 256
       Runtime: nodejs14.x
-      MemorySize: 128
       Timeout: 100
-      Description: A Lambda function that returns a static string.
+      Description: A Lambda function that process actions related to communications
+        between parties (bids, messages).
+      Environment:
+        Variables:
+          CONN_TABLE_NAME:
+            Ref: ConnTableName
+          TRACE_TABLE_NAME:
+            Ref: TraceTableName
+          OFFER_TABLE_NAME:
+            Ref: OfferTableName
       Policies:
-      - AWSLambdaBasicExecutionRole
-      CodeUri: helloFromLambdaFunction
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ConnTableName
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TraceTableName
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: OfferTableName
+      - Statement:
+        - Effect: Allow
+          Action:
+          - execute-api:ManageConnections
+          Resource:
+          - Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${EDMarketplaceSocket}/*
+      CodeUri: CommsFunction
+  CommsPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+    - EDMarketplaceSocket
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: CommsFunction
+      Principal: apigateway.amazonaws.com
 Outputs:
   ConnectionsTableArn:
     Description: Connections Table ARN
     Value:
       Fn::GetAtt:
       - ConnectionsTable
+      - Arn
+  TracesTableArn:
+    Description: Traces Table ARN
+    Value:
+      Fn::GetAtt:
+      - TracesTable
+      - Arn
+  OffersTableArn:
+    Description: Offers Table ARN
+    Value:
+      Fn::GetAtt:
+      - OffersTable
       - Arn
   OnConnectFunctionArn:
     Description: OnConnect function ARN
@@ -252,6 +387,12 @@ Outputs:
     Value:
       Fn::GetAtt:
       - OfferFunction
+      - Arn
+  CommsFunctionArn:
+    Description: Comms handler function ARN
+    Value:
+      Fn::GetAtt:
+      - CommsFunction
       - Arn
   WebSocketURI:
     Description: The WSS Protocol URI to connect to

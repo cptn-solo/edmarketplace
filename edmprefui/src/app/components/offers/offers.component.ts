@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subject } from 'rxjs/internal/Subject';
 import { takeUntil } from 'rxjs/operators';
 import { TradeItem } from 'src/app/datamodels/tradeitem';
-import { DEFAULT_USER_INFO, UserInfo } from 'src/app/datamodels/userinfo';
+import { DEFAULT_USER_INFO, Offer, UserInfo } from 'src/app/datamodels/userinfo';
 import { EdmpwsapiService } from 'src/app/services/edmpwsapi.service';
 import { OfferService } from 'src/app/services/offer.service';
 
@@ -13,8 +13,8 @@ import { OfferService } from 'src/app/services/offer.service';
 })
 export class OffersComponent implements OnInit, OnDestroy {
 
-  inboundOffers: Array<UserInfo> = [];
-  filteredOffers: Array<UserInfo> = [];
+  inboundOffers: Array<Offer> = [];
+  filteredOffers: Array<Offer> = [];
   userInfo: UserInfo = DEFAULT_USER_INFO;
   connected: boolean = false;
   onlymatched: boolean = false;

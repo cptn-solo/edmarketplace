@@ -1,49 +1,81 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 import { TradeItem } from '../datamodels/tradeitem';
-import { UserInfo, DEFAULT_USER_INFO } from '../datamodels/userinfo';
+import { UserInfo, DEFAULT_USER_INFO, Offer } from '../datamodels/userinfo';
 import { StorageService } from './storage.service';
 
 const USER_INFO_KEY = 'USER_INFO';
 const OFFERS_KEY = 'OFFERS';
-export interface  IncomingOffer {
-  connectionId: string; // offerer's connection id
-  offer: UserInfo; // offer
-}
+const TOKEN_KEY = 'TRACE_TOKEN';
+const CONNECTION_KEY = 'CONNECTION_KEY';
 @Injectable({
   providedIn: 'root'
 })
 export class StateService {
 
   private _userInfo$ = new BehaviorSubject<UserInfo>(DEFAULT_USER_INFO);
-  private _offers$ = new BehaviorSubject<Array<UserInfo>>([]);
+  private _offers$ = new BehaviorSubject<Array<Offer>>([]);
+  private _traceToken$ = new BehaviorSubject<string>('');
+  private _connectionId$ = new BehaviorSubject<string>('');
 
   private _getoffersReset = false;
 
   public userInfo$ = this._userInfo$.asObservable();
   public offers$ = this._offers$.asObservable();
+  public traceToken$ = this._traceToken$.asObservable();
+  public connectionId$ = this._connectionId$.asObservable();
 
   constructor(private storage: StorageService) {
     var userInfo = this.storage.loadInfo(USER_INFO_KEY) as unknown as UserInfo??DEFAULT_USER_INFO;
-    var offers = this.storage.loadInfo(OFFERS_KEY) as unknown as Array<UserInfo>??[];
+    var offers = this.storage.loadInfo(OFFERS_KEY) as unknown as Array<Offer>??[];
+    var traceToken = this.storage.loadInfo(TOKEN_KEY) as unknown as string??'';
+    var connectionId = this.storage.loadInfo(CONNECTION_KEY) as unknown as string??'';
 
     this._userInfo$.next(userInfo);
     this._offers$.next(offers);
+    this._traceToken$.next(traceToken);
+    this._connectionId$.next(connectionId);
 
     // subscribing after initial load to persist all future updates
     // TODO: add throttling to cache changes
     this.userInfo$.subscribe(val => this.storage.setInfo(val, USER_INFO_KEY));
     this.offers$.subscribe(val => this.storage.setInfo(val, OFFERS_KEY));
+    this.traceToken$.subscribe(val => this.storage.setInfo(val, TOKEN_KEY));
+    this.connectionId$.subscribe(val => this.storage.setInfo(val, CONNECTION_KEY));
   }
 
-  processOfferRemove(connectionId: string) {
-    if (connectionId === this._userInfo$.value.connectionid) return; // skip my own offer broadcast
+  registerUserTraceToken(token: string) {
+    this._traceToken$.next(token);
+  }
 
+  registerUserConnection(connectionId: string) {
+    this._connectionId$.next(connectionId);
+  }
+
+  processOffersConnectionId(offerIds: Array<string>, connectionId: string) {
     var offers = this._offers$.value;
-    var idxExisting = offers.findIndex(o => o.connectionid === connectionId);
-    if (idxExisting >= 0) {
-      offers.splice(idxExisting, 1);
-    }
+    offerIds.forEach(offerId => {
+      if (offerId === this._userInfo$.value.offerId) return; // skip my own offer broadcast
+
+      var idxExisting = offers.findIndex(o => o.offerId === offerId);
+      if (idxExisting >= 0) {
+        offers[idxExisting].connectionId = connectionId;
+        console.log('processOffersConnectionState: '+offerId+' conn: '+connectionId);
+      }
+    });
+    this._offers$.next(offers);
+  }
+
+  processRemoveOffers(offerIds: Array<string>) {
+    var offers = this._offers$.value;
+    offerIds.forEach(offerId => {
+      if (offerId === this._userInfo$.value.offerId) return; // skip my own offer broadcast
+
+      var idxExisting = offers.findIndex(o => o.offerId === offerId);
+      if (idxExisting >= 0) {
+        offers.splice(idxExisting, 1);
+      }
+    });
     this._offers$.next(offers);
   }
 
@@ -58,34 +90,52 @@ export class StateService {
     this._getoffersReset = true;
   }
 
-  processInboundOffersBatch(batch: Array<IncomingOffer>) {
-    var offers = this._offers$.value;
+  processInboundOffersBatch(offers: Array<Offer>) {
+    var _offers = this._offers$.value;
     if (this._getoffersReset) { // flag toggled on getoffers request and resetted upon 1st batch processing
-      offers = [];
+      _offers = [];
       this._getoffersReset = false;
     }
-    batch.forEach(offer => {
-      this.processOneInboundOffer(offer, offers);
+    offers.forEach(offer => {
+      this.processOneInboundOffer(offer, _offers);
     });
-    this._offers$.next(offers);
+    this._offers$.next(_offers);
   }
 
-  processInboundOffer(offer: UserInfo) {
+  processInboundOffer(offer: Offer) {
     var offers = this._offers$.value;
-    this.processOneInboundOffer({ connectionId: offer.connectionid??"", offer }, offers);
+    this.processOneInboundOffer(offer, offers);
     this._offers$.next(offers);
   }
 
-  processOneInboundOffer(offer: IncomingOffer, offers: Array<UserInfo>) {
-    if (offer.connectionId === "" ||
-      offer.connectionId === this._userInfo$.value.connectionid) return; // skip my own offer broadcast
+  processOneInboundOffer(offer: Offer, offers: Array<Offer>) {
+    // note: inbound offers have empty token value
 
-    var idxExisting = offers.findIndex(o => o.connectionid === offer.connectionId);
+    if (offer.offerId === this._userInfo$.value.offerId) return; // skip my own offer broadcast
+
+    var idxExisting = offers.findIndex(o => o.offerId === offer.offerId);
     if (idxExisting >= 0) {
-      offers[idxExisting].items = offer.offer.items;
+      offers[idxExisting].items = offer.items;
     } else {
-      offers.push(offer.offer);
+      offers.push(offer);
     }
+  }
+
+  processUserOffer(offers: Array<Offer>): boolean {
+    // returns true if nothing to publish (server data overrites user's data)
+    var userInfo = this._userInfo$.value;
+    if (userInfo.items.length === 0 && offers.length !== 0) {
+      var defaultOffer = offers[0] as unknown as Offer;
+      userInfo.bids = defaultOffer.bids;
+      userInfo.nickname = defaultOffer.info.nickname;
+      userInfo.location = defaultOffer.info.location;
+      userInfo.created = defaultOffer.created;
+      userInfo.expired = defaultOffer.expired;
+      this.updateUserInfo(userInfo);
+    } else if (userInfo.published) {
+      return false;
+    }
+    return true;
   }
 
   updateUserTradeItems(items: Array<TradeItem>) {
