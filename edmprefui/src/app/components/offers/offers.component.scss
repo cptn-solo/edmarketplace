@@ -35,6 +35,8 @@
             height: 14px;
             margin: 8px 0px;
             padding: 8px 8px;
+            display: flex;
+            align-items: center;
         }
         .left-offer-info {
             color: azure;
@@ -44,6 +46,7 @@
             width: 150px;
             color: lightgreen;
             text-align: right;
+            justify-content: flex-end;
         }
     }
     .offer-items {

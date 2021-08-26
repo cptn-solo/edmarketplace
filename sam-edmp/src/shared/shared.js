@@ -167,8 +167,10 @@ exports.broadcastPostCalls = async (postCalls) => {
 };
 
 exports.postToConnection = async (apigwManagementApi, connectionId, payload) => {
+    if (connectionId.length === 0) return; // nothing to do
     try {
         await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) }).promise();
+        console.log(`postToConnection ${connectionId} ${JSON.stringify(payload)}`);
     } catch (e) {
 
         if (e.statusCode === 410) {

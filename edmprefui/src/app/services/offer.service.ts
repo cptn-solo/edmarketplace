@@ -12,6 +12,12 @@ const OFFER_EVENT_OFFLINEOFFERS = "offlineoffers"
 const OFFER_EVENT_GET = "getoffers";
 const OFFER_EVENT_DROPOFFERS = "dropoffers";
 
+const COMMS_METHOD_BIDPUSH = "bidpush";
+const COMMS_METHOD_BIDPULL = "bidpull";
+const COMMS_METHOD_BIDACCEPT = "bidaccept";
+const COMMS_METHOD_MESSAGE = "message";
+
+
 const uuidv4 = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -102,6 +108,12 @@ export class OfferService {
           this.state.processRemoveOffers(jsonData.offerIds);
           break;
         }
+        case COMMS_METHOD_BIDPUSH:   // { code: "bidpush", offer }
+        case COMMS_METHOD_BIDPUSH: { // { code: "bidpull", offer }
+            // incoming offer with new bid just added
+          this.state.processInboundOffer(jsonData.offer);
+          break;
+        }
         default: {
           console.log(`messagesMonitor: ${data}`);
           break;
@@ -180,6 +192,19 @@ export class OfferService {
   }
 
   /** sync with server */
+
+  bidPushOrPull(offerId: string, pushMode: boolean) {
+    const token = this._token$.value;
+    this.api.sendMessage(
+      { "action": "comms",
+        "data": {
+          "method": pushMode ? COMMS_METHOD_BIDPUSH : COMMS_METHOD_BIDPULL,
+          "payload": { token, offerId }
+        }
+      }
+    );
+  }
+
   getoffers() {
     this.state.prepareOffersBatchProcessing();
     this.api.sendMessage(
@@ -220,6 +245,7 @@ export class OfferService {
         nickname: userInfo.nickname,
         location: userInfo.location
       },
+      bids: userInfo.bids,
       items: userInfo.items,
       created: userInfo.created,
       expired: userInfo.expired

@@ -61,6 +61,36 @@ export class OffersComponent implements OnInit, OnDestroy {
     }
   }
 
+  bidpush(offer: Offer) {
+    if (this.userInfo.offerId.length === 0) return;
+
+    this.offers.bidPushOrPull(offer.offerId, true);
+  }
+
+  bidpull(offer: Offer) {
+    if (this.userInfo.offerId.length === 0) return;
+
+    this.offers.bidPushOrPull(offer.offerId, false);
+  }
+
+  sendMessage(offer: Offer) {
+
+  }
+
+  checkBid(offer: Offer): boolean {
+    // return true if a bid already added to the specified offer
+    if (this.userInfo.offerId.length === 0) return false;
+    if ((offer.bids??[]).findIndex(b => b === this.userInfo.offerId) >= 0) return true;
+    return false;
+  }
+
+  checkAccept(offer: Offer): boolean {
+    // return true if a bid received from the specified offer
+    if (this.userInfo.offerId.length === 0) return false;
+    if ((this.userInfo.bids??[]).findIndex(b => b === offer.offerId) >= 0) return true;
+    return false;
+  }
+
   getoffers() {
     this.offers.getoffers();
   }

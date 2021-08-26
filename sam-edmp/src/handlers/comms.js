@@ -22,9 +22,10 @@ exports.comms = async event => {
         // switch method being called
         switch (eventBody.data.method) {
             case shared.COMMS_METHOD_BIDPUSH:
-                await bidOnOffer(apigwManagementApi, connectionid, eventBody.data.payload.token, eventBody.data.payload.offerId);
+                await addOrRemoveBid(apigwManagementApi, connectionid, eventBody.data.payload.token, eventBody.data.payload.offerId, true);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_BIDPULL:
+                await addOrRemoveBid(apigwManagementApi, connectionid, eventBody.data.payload.token, eventBody.data.payload.offerId, false);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_BIDACCEPT:
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
@@ -39,7 +40,7 @@ exports.comms = async event => {
     }
 };
 
-async function bidOnOffer (apigwManagementApi, connectionId, token, offerId) {
+async function addOrRemoveBid (apigwManagementApi, connectionId, token, offerId, addMode) {
     const trace = await shared.getTrace(token);
 
     if (trace.offers.length === 0) return false; // no my offer
@@ -55,14 +56,23 @@ async function bidOnOffer (apigwManagementApi, connectionId, token, offerId) {
         offer.bids = [];
     }
     const idx = offer.bids.findIndex(b => b === myOfferId);
-    if (idx < 0) {
+    if (idx < 0 && addMode) {
         offer.bids.push(myOfferId);
+    } else if (idx >= 0 && !addMode) {
+        offer.bids.splice(idx, 1);
+        // TODO: leave this method to prevent spamming.
+        // for now just for debug purposes we push event to parties even
+        // if a bid already added to an offer
+    } else {
+        return false; // no need to communicate
     }
     await shared.putOffer(offer);
     const payload = { code: shared.COMMS_METHOD_BIDPUSH, offer };
-    if (offer.connectionId.length > 0) {
-        await shared.postToConnection(apigwManagementApi, offer.connectionId, payload);
-    }
+    // both sides should get notified about bid being placed/removed
+    await Promise.all([
+        shared.postToConnection(apigwManagementApi, offer.connectionId, payload),
+        shared.postToConnection(apigwManagementApi, connectionId, payload)
+    ]);
 
     return true;
 };

@@ -111,11 +111,16 @@ export class StateService {
   processOneInboundOffer(offer: Offer, offers: Array<Offer>) {
     // note: inbound offers have empty token value
 
-    if (offer.offerId === this._userInfo$.value.offerId) return; // skip my own offer broadcast
+    if (offer.offerId === this._userInfo$.value.offerId) {
+      var userinfo = this._userInfo$.value;
+      userinfo.bids = offer.bids;
+      this._userInfo$.next(userinfo);
+      return; // skip my own offer broadcast
+    }
 
     var idxExisting = offers.findIndex(o => o.offerId === offer.offerId);
     if (idxExisting >= 0) {
-      offers[idxExisting].items = offer.items;
+      offers[idxExisting] = offer;
     } else {
       offers.push(offer);
     }
@@ -131,6 +136,7 @@ export class StateService {
       userInfo.location = defaultOffer.info.location;
       userInfo.created = defaultOffer.created;
       userInfo.expired = defaultOffer.expired;
+      userInfo.offerId = defaultOffer.offerId;
       this.updateUserInfo(userInfo);
     } else if (userInfo.published) {
       return false;
