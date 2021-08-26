@@ -31,6 +31,10 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .toolbar-spacer {
     flex: 1 1 auto;
 }
+.mat-expansion-panel-header-title {
+    font-size: 18px;
+}
+
 /* dirty fix for gap between app toolbar and inner toolbars */
 .mat-sidenav-container {
     @media screen and (max-width: 600px) {

@@ -12,6 +12,7 @@
         <div class="left-header"><span>Supply</span></div>
         <div class="settings">&nbsp;</div>
         <div class="right-header"><span>Demand</span></div>
+        <div class="settings">&nbsp;</div>
     </div>
     <div class="offer" *ngFor="let offer of filteredOffers">
         <input #bid type="hidden" [value]="checkBid(offer)"/>
@@ -48,6 +49,7 @@
                     <mat-chip color="{{checkMatch(item, true) ? 'accent' :'primary'}}" selected><b>{{item.demand}}</b>&nbsp;&nbsp;{{item.dname}}</mat-chip>
                 </mat-chip-list>
             </div>
+            <div class="settings">&nbsp;</div>
         </div>
     </div>
 </div>

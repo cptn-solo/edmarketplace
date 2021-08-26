@@ -19,8 +19,7 @@ export class AppComponent implements OnDestroy, OnInit {
   mobileQuery: MediaQueryList;
 
   navItems = [
-    { url: 'myoffer', name: 'My Offer'},
-    { url: 'offers', name: 'Incoming Offers'}
+    { url: 'myoffer', name: 'Offers'},
   ];
 
 

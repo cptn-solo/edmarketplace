@@ -3,15 +3,13 @@
     margin: 8px;
     padding: 8px;
     .left-header, .right-header {
+        font-weight: bolder;
         span {
             text-align: center;
         }
         display: flex;
         flex-wrap: wrap;
         flex: 1;
-    }
-    .settings {
-        width: 60px;
     }
     .left-header {
         flex-direction: row-reverse;
@@ -39,12 +37,11 @@
             align-items: center;
         }
         .left-offer-info {
-            color: azure;
             width: 200px;
+            font-weight: bolder;
         }
         .right-offer-info {
             width: 150px;
-            color: lightgreen;
             text-align: right;
             justify-content: flex-end;
         }
@@ -76,9 +73,12 @@
         .supply-items, .demand-items {
             flex-grow: 1;
         }
-        .settings {
-            flex-grow: 0;
-            width: 60px;
-        }
     }
+}
+.offers-header >.settings, .offer >.offer-items >.settings {
+    flex-grow: 0;
+    width: 56px;
+    min-width: 56px;
+    justify-content: center;
+    padding: 8px;
 }

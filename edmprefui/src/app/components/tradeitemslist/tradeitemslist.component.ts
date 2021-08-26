@@ -8,7 +8,7 @@ import { TradeItem } from '../../datamodels/tradeitem';
 @Component({
   selector: 'app-tradeitemslist',
   templateUrl: './tradeitemslist.component.html',
-  styleUrls: ['./tradeitemslist.component.scss']
+  styleUrls: ['./tradeitemslist.component.scss', '../offers/offers.component.scss']
 })
 export class TradeitemslistComponent implements OnDestroy {
 
