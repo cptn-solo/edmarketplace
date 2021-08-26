@@ -1,0 +1,25 @@
+<div class="offer-info">
+    <mat-form-field appearance="fill">
+        <mat-label>Offer location (system)</mat-label>
+        <input matInput
+            maxLength="100"
+            [(ngModel)]="userinfo.location">
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+        <mat-label>Nickname</mat-label>
+        <input matInput
+            maxLength="100"
+            [(ngModel)]="userinfo.nickname">
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="contact-info">
+        <mat-label>Contact details (discord)</mat-label>
+        <textarea matInput #contactInfo
+            placeholder="Not shared until trade request is accepted by your party"
+            maxLength="200"
+            [(ngModel)]="userinfo.contactinfo">
+        </textarea>
+        <mat-hint align="end">{{contactInfo.value.length}} / {{contactInfo.maxLength}}</mat-hint>
+    </mat-form-field>
+</div>

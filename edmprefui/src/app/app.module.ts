@@ -4,7 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { MyofferComponent } from './components/myoffer/myoffer.component';
-import { TradeitemslistComponent } from './components/tradeitemslist/tradeitemslist.component';
+import { TradeComponent } from './components/trade/trade.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -20,12 +20,18 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { FormsModule } from '@angular/forms';
 import { OffersComponent } from './components/offers/offers.component';
+import { MyinfoeditComponent } from './components/myinfoedit/myinfoedit.component';
+import { TradeitemeditComponent } from './components/tradeitemedit/tradeitemedit.component';
+import { MytradeitemseditComponent } from './components/mytradeitemsedit/mytradeitemsedit.component';
 @NgModule({
   declarations: [
     AppComponent,
     MyofferComponent,
-    TradeitemslistComponent,
-    OffersComponent
+    TradeComponent,
+    OffersComponent,
+    MyinfoeditComponent,
+    TradeitemeditComponent,
+    MytradeitemseditComponent
   ],
   imports: [
     BrowserModule,

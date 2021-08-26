@@ -1,0 +1,60 @@
+<div>
+    <div class="offers-header">
+        <div class="left-header"><span>Supply</span></div>
+        <div class="settings">&nbsp;</div>
+        <div class="right-header"><span>Demand</span></div>
+        <div class="settings">&nbsp;</div>
+    </div>
+    <div class="offer">
+        <div class="offer-header">
+            <div class="left-offer-info">{{userinfo.location}} : {{userinfo.nickname}}</div>
+            <div class="right-offer-info">
+            </div>
+        </div>
+        <div *ngFor="let item of items" class="offer-items">
+            <div class="supply-items">
+                <mat-chip-list>
+                    <mat-chip color="primary">{{item.sname}}&nbsp;
+                        <button mat-icon-button aria-label="Remove one"
+                            (click)="change('supply', -1, item)">
+                            <mat-icon>remove</mat-icon>
+                        </button>
+                        <b>{{item.supply}}</b>
+                        <button mat-icon-button aria-label="Add one"
+                            (click)="change('supply', +1, item)">
+                            <mat-icon>add</mat-icon>
+                        </button>
+                    </mat-chip>
+                </mat-chip-list>
+            </div>
+            <div class="settings">
+                <button mat-icon-button color="warn"
+                    title="Switch trade item sides (don't forget to Update Offer)"
+                    (click)="switchsides(item)">
+                    <mat-icon>multiple_stop</mat-icon>
+                </button>
+            </div>
+            <div class="demand-items">
+                <mat-chip-list>
+                    <mat-chip color="primary">
+                        <button mat-icon-button aria-label="Remove one" (click)="change('demand', -1, item)">
+                            <mat-icon>remove</mat-icon>
+                        </button>
+                        <b>{{item.demand}}</b>
+                        <button mat-icon-button aria-label="Add one" (click)="change('demand', +1, item)">
+                            <mat-icon>add</mat-icon>
+                        </button>
+                        &nbsp;{{item.dname}}
+                    </mat-chip>
+                </mat-chip-list>
+            </div>
+            <div class="settings">
+                <button mat-icon-button color="warn"
+                    title="Remove item from your offer (don't forget to Update Offer)"
+                    (click)="delete(item)">
+                    <mat-icon>clear</mat-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

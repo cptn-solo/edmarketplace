@@ -24,15 +24,21 @@ body, input[type="text"], button {
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
+/* material components */
+
+.mat-expansion-panel-header-title {
+    font-size: 18px;
+}
+.mat-form-field {
+    margin-right: 8px;
+}
+
 /* utilities */
 .basic-container {
     padding: 30px;
 }
 .toolbar-spacer {
     flex: 1 1 auto;
-}
-.mat-expansion-panel-header-title {
-    font-size: 18px;
 }
 
 /* dirty fix for gap between app toolbar and inner toolbars */

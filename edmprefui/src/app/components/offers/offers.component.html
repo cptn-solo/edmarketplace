@@ -15,21 +15,19 @@
         <div class="settings">&nbsp;</div>
     </div>
     <div class="offer" *ngFor="let offer of filteredOffers">
-        <input #bid type="hidden" [value]="checkBid(offer)"/>
-        <input #accept type="hidden" [value]="checkAccept(offer)"/>
-        <input #message type="hidden" [value]="bid.value === 'true' && accept.value === 'true'"/>
+        <input #bidstage type="hidden" [value]="getBidStage(offer)"/>
         <div class="offer-header">
             <div class="left-offer-info">{{offer.info.location}} : {{offer.info.nickname}}</div>
             <div class="right-offer-info" *ngIf="!!userInfo.offerId">
-                <button mat-button title="Recall Bid from Offer" *ngIf="bid.value === 'true'" color="warn"
+                <button mat-button title="Recall Bid from Offer" *ngIf="bidstage.value === 'wait' || bidstage.value === 'message'" color="warn"
                     (click)="bidpull(offer)">Pull Bid</button>
-                <button mat-button title="Bid on Offer" *ngIf="accept.value === 'false' && bid.value === 'false'" color="accent"
+                <button mat-button title="Bid on Offer" *ngIf="bidstage.value === 'bid'" color="accent"
                     (click)="bidpush(offer)">Push Bid</button>
-                <button mat-button title="Accept Bid" *ngIf="accept.value === 'true' && message.value === 'false'" color="accent"
+                <button mat-button title="Accept Bid" *ngIf="bidstage.value === 'accept'" color="accent"
                     (click)="bidpush(offer)">Accept Bid</button>
-                <button mat-button title="Send Message" *ngIf="message.value === 'true'" color="accent"
+                <button mat-button title="Send Message" *ngIf="bidstage.value === 'message'" color="accent"
                     (click)="sendMessage(offer)">Send Message</button>
-                <mat-icon color="accent" *ngIf="bid.value === 'true' && accept.value === 'false'"
+                <mat-icon color="accent" *ngIf="bidstage.value === 'wait'"
                     title="Accept pending">schedule</mat-icon>
             </div>
         </div>

@@ -1,0 +1,48 @@
+<mat-accordion class="example-headers-align" multi>
+    <mat-expansion-panel><!-- My Offer Info -->
+        <mat-expansion-panel-header>
+            <mat-panel-title>My Offer Info</mat-panel-title>
+            <mat-panel-description>Share your location and contact info</mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <app-myinfoedit #myinfoedit></app-myinfoedit>
+
+        <mat-action-row>
+            <button mat-button color="accent"
+                (click)="myinfoedit.updateinfo();tradeitemspanel.expanded=true;">Save</button>
+        </mat-action-row>
+    </mat-expansion-panel>
+    <mat-expansion-panel><!-- New item -->
+        <mat-expansion-panel-header>
+            <mat-panel-title>New item</mat-panel-title>
+            <mat-panel-description>Add something to your Offer</mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <app-tradeitemedit #tradeitemedit></app-tradeitemedit>
+
+        <mat-action-row>
+            <button mat-button color="accent"
+                (click)="tradeitemedit.add();tradeitemspanel.expanded=true;">Add Item</button>
+        </mat-action-row>
+    </mat-expansion-panel>
+    <mat-expansion-panel #tradeitemspanel [expanded]="true"><!-- Trade items -->
+        <mat-expansion-panel-header>
+            <mat-panel-title>Trade items</mat-panel-title>
+            <mat-panel-description>Your current supply and demand</mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <app-mytradeitemsedit #mytradeitemsedit></app-mytradeitemsedit>
+
+        <mat-action-row>
+            <app-myoffer></app-myoffer>
+        </mat-action-row>
+
+    </mat-expansion-panel>
+    <mat-expansion-panel>
+        <mat-expansion-panel-header><!-- All offers -->
+            <mat-panel-title>All offers</mat-panel-title>
+            <mat-panel-description>Currently available offers</mat-panel-description>
+        </mat-expansion-panel-header>
+        <app-offers></app-offers>
+    </mat-expansion-panel>
+</mat-accordion>

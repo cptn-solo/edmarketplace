@@ -6,6 +6,14 @@ import { DEFAULT_USER_INFO, Offer, UserInfo } from 'src/app/datamodels/userinfo'
 import { EdmpwsapiService } from 'src/app/services/edmpwsapi.service';
 import { OfferService } from 'src/app/services/offer.service';
 
+enum BidStage {
+  NA = 'na', // no own offer
+  BID = 'bid', // the offer is ready for my bid to be pushed
+  WAIT = 'wait', // the offer already has a bid from me
+  ACCEPT = 'accept', // bid form the offer present in my offer bids, ready to bid in return
+  MESSAGE = 'message' // offers have each other in their respective bids collection, ready for messaging
+}
+
 @Component({
   selector: 'app-offers',
   templateUrl: './offers.component.html',
@@ -77,24 +85,35 @@ export class OffersComponent implements OnInit, OnDestroy {
 
   }
 
-  checkBid(offer: Offer): boolean {
+  getBidStage(offer: Offer): BidStage {
     // return true if a bid already added to the specified offer
-    if (this.userInfo.offerId.length === 0) return false;
-    if ((offer.bids??[]).findIndex(b => b === this.userInfo.offerId) >= 0) return true;
-    return false;
-  }
+    var retval = BidStage.NA;
+    if (this.userInfo.offerId.length === 0) return retval;
 
-  checkAccept(offer: Offer): boolean {
-    // return true if a bid received from the specified offer
-    if (this.userInfo.offerId.length === 0) return false;
-    if ((this.userInfo.bids??[]).findIndex(b => b === offer.offerId) >= 0) return true;
-    return false;
+    if ((offer.bids??[]).findIndex(b => b === this.userInfo.offerId) < 0) {
+      // no outgoing bids
+      retval = BidStage.BID;
+    } else {
+      // bid already pushed
+      retval = BidStage.WAIT;
+    }
+    if ((this.userInfo.bids??[]).findIndex(b => b === offer.offerId) < 0) {
+      // no incoming bids
+      return retval;
+    } else if (retval === BidStage.WAIT) {
+      // incoming bid + outgoing bid
+      return BidStage.MESSAGE;
+    } else {
+      // incoming bid but no outgoing bid
+      return BidStage.ACCEPT;
+    }
   }
 
   getoffers() {
     this.offers.getoffers();
   }
 
+  /* lifesycle */
   ngOnInit(): void {
   }
 
