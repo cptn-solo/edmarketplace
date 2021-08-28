@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { ChatMessage } from '../datamodels/chatmessage';
 import { TradeItem } from '../datamodels/tradeitem';
-import { DEFAULT_OFFER_EXPIRED_HOURS, DEFAULT_USER_INFO, Offer, UserInfo } from '../datamodels/userinfo';
+import { BidStage, DEFAULT_OFFER_EXPIRED_HOURS, DEFAULT_USER_INFO, Offer, OfferChange, OfferChangeFactory, OfferChangeType, UserInfo } from '../datamodels/userinfo';
 import { EdmpwsapiService } from './edmpwsapi.service';
 import { StateService } from './state.service';
 
@@ -11,6 +12,11 @@ const OFFER_EVENT_ONLINEOFFERS = "onlineoffers";
 const OFFER_EVENT_OFFLINEOFFERS = "offlineoffers"
 const OFFER_EVENT_GET = "getoffers";
 const OFFER_EVENT_DROPOFFERS = "dropoffers";
+
+const COMMS_METHOD_BIDPUSH = "bidpush";
+const COMMS_METHOD_BIDPULL = "bidpull";
+const COMMS_METHOD_MESSAGE = "message";
+
 
 const uuidv4 = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -27,10 +33,14 @@ export class OfferService {
   _offers$ = new BehaviorSubject<Array<Offer>>([]);
   _token$ = new BehaviorSubject<string>('');
 
+  _offerChanged$ = new BehaviorSubject<OfferChange|null>(null);
+
   userInfo$ = this._userinfo$.asObservable();
   items$ = this._items$.asObservable();
   offers$ = this._offers$.asObservable();
   token$ = this._token$.asObservable();
+
+  offerChanged$ = this._offerChanged$.asObservable();
 
   constructor(
     private api: EdmpwsapiService,
@@ -72,34 +82,51 @@ export class OfferService {
           this.state.registerUserTraceToken(jsonData.trace.token);
           this.state.registerUserConnection(jsonData.trace.connectionId);
           // enlisted, initial connection info (connection id)
-          if (!this.state.processUserOffer(jsonData.offers)) {
-            this.publishoffer();
-          }
+          this.state.processUserOffer(jsonData.offers);
+          // update current offers state (bids mostly)
+          this.getoffers();
           break;
         }
         case OFFER_EVENT_ONLINEOFFERS: { // { code: "onlineoffers", offerIds, connectionId }
           // mark offers online
           this.state.processOffersConnectionId(jsonData.offerIds, jsonData.connectionId);
+          this._offerChanged$.next(OfferChangeFactory(jsonData.offerIds, OfferChangeType.ONLINE));
           break;
         }
         case OFFER_EVENT_OFFLINEOFFERS: { // { code: "offlineoffers", offerIds }
           // mark offers offline
           this.state.processOffersConnectionId(jsonData.offerIds, "");
+          this._offerChanged$.next(OfferChangeFactory(jsonData.offerIds, OfferChangeType.OFFLINE));
           break;
         }
         case OFFER_EVENT_GET: { // { code: "getoffers", offers, page, ofpages }
           // incoming offers batch, should be processed to get matches and other usefull info
           this.state.processInboundOffersBatch(jsonData.offers);
+          this._offerChanged$.next(OfferChangeFactory((jsonData.offers as Array<Offer>).map(offer => offer.offerId), OfferChangeType.PUBLISH));
           break;
         }
         case OFFER_EVENT_PUBLISHOFFER: { // { code: "publishoffer", offer }
           // incoming offer, should be processed to get matches and other usefull info
           this.state.processInboundOffer(jsonData.offer);
+          this._offerChanged$.next(OfferChangeFactory([jsonData.offer.offerId], OfferChangeType.PUBLISH));
           break;
         }
         case OFFER_EVENT_DROPOFFERS: { // { code: "dropoffers", offerIds }
           // some offer was dropped notification, should be processed to update offers
           this.state.processRemoveOffers(jsonData.offerIds);
+          this._offerChanged$.next(OfferChangeFactory(jsonData.offerIds, OfferChangeType.DROP));
+          break;
+        }
+        case COMMS_METHOD_BIDPUSH:   // { code: "bidpush", offer }
+        case COMMS_METHOD_BIDPULL: { // { code: "bidpull", offer }
+            // incoming offer with new bid just added
+          this.state.processInboundOffer(jsonData.offer);
+          this._offerChanged$.next(OfferChangeFactory([jsonData.offer.offerId], jsonData.code));
+          break;
+        }
+        case COMMS_METHOD_MESSAGE: { // { code, message }
+          this.state.processInboundMessage(jsonData.message);
+          this._offerChanged$.next(OfferChangeFactory([jsonData.message.offerId], OfferChangeType.MESSAGE));
           break;
         }
         default: {
@@ -135,7 +162,6 @@ export class OfferService {
     this.state.updateUserInfo(userInfo);
     this.updateChangedState(true);
   }
-
 
   addItem(item: TradeItem) {
     var items = this._items$.value as unknown as Array<TradeItem>|null;
@@ -179,7 +205,57 @@ export class OfferService {
     this.updateChangedState(true);
   }
 
+  checkOfferBidStage(offer: Offer): BidStage {
+    // return true if a bid already added to the specified offer
+    var retval = BidStage.NA;
+    if (this._userinfo$.value.offerId.length === 0) return retval;
+
+    if ((offer.bids??[]).findIndex(b => b === this._userinfo$.value.offerId) < 0) {
+      // no outgoing bids
+      retval = BidStage.BID;
+    } else {
+      // bid already pushed
+      retval = BidStage.WAIT;
+    }
+    if ((this._userinfo$.value.bids??[]).findIndex(b => b === offer.offerId) < 0) {
+      // no incoming bids
+      return retval;
+    } else if (retval === BidStage.WAIT) {
+      // incoming bid + outgoing bid
+      return BidStage.MESSAGE;
+    } else {
+      // incoming bid but no outgoing bid
+      return BidStage.ACCEPT;
+    }
+  }
+
   /** sync with server */
+
+  bidPushOrPull(offerId: string, pushMode: boolean) {
+    const token = this._token$.value;
+    this.api.sendMessage(
+      { "action": "comms",
+        "data": {
+          "method": pushMode ? COMMS_METHOD_BIDPUSH : COMMS_METHOD_BIDPULL,
+          "payload": { token, offerId }
+        }
+      }
+    );
+  }
+
+  sendChatMessage(message: ChatMessage): ChatMessage {
+    const token = this._token$.value;
+    this.api.sendMessage(
+      { "action": "comms",
+        "data": {
+          "method": COMMS_METHOD_MESSAGE,
+          "payload": { token, message }
+        }
+      }
+    );
+    return this.state.addOtboundMessage(message);
+  }
+
   getoffers() {
     this.state.prepareOffersBatchProcessing();
     this.api.sendMessage(
@@ -220,6 +296,7 @@ export class OfferService {
         nickname: userInfo.nickname,
         location: userInfo.location
       },
+      bids: userInfo.bids,
       items: userInfo.items,
       created: userInfo.created,
       expired: userInfo.expired

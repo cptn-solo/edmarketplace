@@ -20,7 +20,7 @@ export class EdmpwsapiService {
   }
 
   public connect() {
-    if (!this.socket$ || this.socket$.closed) {
+    if (!this.connected$.value || !this.socket$ || this.socket$.closed) {
       this.socket$ = this.getNewWebSocket();
       const messages = this.socket$.pipe(
         tap({

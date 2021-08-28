@@ -1,0 +1,14 @@
+div.offer-info {
+    .mat-form-field {
+        min-width: 300px;
+        // display: flex;
+        @media screen and (max-width: 600px) {
+            width: 100%;
+            display: block;
+        }
+        &.contact-info {
+            min-width: 300px;
+            display: block;
+        }
+    }
+}

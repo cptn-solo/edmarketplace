@@ -241,6 +241,8 @@ Resources:
       Environment:
         Variables:
           CONN_TABLE_NAME: !Ref ConnTableName
+          TRACE_TABLE_NAME: !Ref TraceTableName
+          OFFER_TABLE_NAME: !Ref OfferTableName
       Policies:
       - DynamoDBCrudPolicy:
           TableName: !Ref ConnTableName

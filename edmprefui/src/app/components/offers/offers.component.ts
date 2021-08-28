@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { Subject } from 'rxjs/internal/Subject';
 import { takeUntil } from 'rxjs/operators';
 import { TradeItem } from 'src/app/datamodels/tradeitem';
-import { DEFAULT_USER_INFO, Offer, UserInfo } from 'src/app/datamodels/userinfo';
+import { BidStage, DEFAULT_USER_INFO, Offer, OfferChangeType, UserInfo } from 'src/app/datamodels/userinfo';
 import { EdmpwsapiService } from 'src/app/services/edmpwsapi.service';
 import { OfferService } from 'src/app/services/offer.service';
-
+import { ChatdialogComponent } from '../chatdialog/chatdialog.component';
 @Component({
   selector: 'app-offers',
   templateUrl: './offers.component.html',
@@ -18,12 +19,16 @@ export class OffersComponent implements OnInit, OnDestroy {
   userInfo: UserInfo = DEFAULT_USER_INFO;
   connected: boolean = false;
   onlymatched: boolean = false;
+  unreadOfferChats: Array<string> = [];
+  chatOfferId: string = '';
 
   private ngUnsubscribe = new Subject();
 
   constructor(
+    public dialog: MatDialog,
     private api: EdmpwsapiService,
     private offers: OfferService) {
+
     this.offers.offers$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(val => {
@@ -36,12 +41,22 @@ export class OffersComponent implements OnInit, OnDestroy {
         this.userInfo = val;
         this.applyCurrentFilters();
       });
+    this.offers.offerChanged$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(val => {
+        if (!val) return;
+        if (val.change === OfferChangeType.MESSAGE &&
+          val.offerIds[0] !== this.chatOfferId &&
+          this.unreadOfferChats.indexOf(val.offerIds[0]) < 0)
+          this.unreadOfferChats.push(val.offerIds[0]);
+      });
 
     this.api.connected$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(val => this.connected = val);
 
   }
+
   applyCurrentFilters() {
     this.filteredOffers = this.inboundOffers
       .map(f => {
@@ -61,10 +76,50 @@ export class OffersComponent implements OnInit, OnDestroy {
     }
   }
 
+  bidpush(offer: Offer) {
+    if (this.userInfo.offerId.length === 0) return;
+
+    this.offers.bidPushOrPull(offer.offerId, true);
+  }
+
+  bidpull(offer: Offer) {
+    if (this.userInfo.offerId.length === 0) return;
+
+    this.offers.bidPushOrPull(offer.offerId, false);
+  }
+
+  openChatDialog(offer: Offer) {
+    this.chatOfferId = offer.offerId;
+    const dialogRef = this.dialog.open(ChatdialogComponent,
+      {
+        width: '520px',
+        height: '520px',
+        data: { offer }
+      });
+
+    dialogRef.afterClosed().subscribe(result => {
+      this.chatOfferId = '';
+      console.log(`Dialog result: ${result}`);
+    });
+
+    const unreadIdx = this.unreadOfferChats.indexOf(offer.offerId);
+    if (unreadIdx >= 0)
+      this.unreadOfferChats.splice(unreadIdx, 1);
+  }
+
+  showBadge(offer: Offer): boolean {
+    return this.unreadOfferChats.indexOf(offer.offerId) >= 0;
+  }
+
+  getBidStage(offer: Offer): BidStage {
+    return this.offers.checkOfferBidStage(offer);
+  }
+
   getoffers() {
     this.offers.getoffers();
   }
 
+  /* lifesycle */
   ngOnInit(): void {
   }
 

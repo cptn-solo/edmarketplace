@@ -9,6 +9,12 @@ exports.OFFER_METHOD_REMOVE = "dropoffers";
 exports.OFFER_EVENT_ONLINE = "onlineoffers";
 exports.OFFER_EVENT_OFFLINE = "offlineoffers";
 
+exports.COMMS_METHOD_BIDPUSH = "bidpush";
+exports.COMMS_METHOD_BIDPULL = "bidpull";
+exports.COMMS_METHOD_BIDACCEPT = "bidaccept";
+exports.COMMS_METHOD_MESSAGE = "message";
+
+
 /** utilities */
 exports.getConnections = async () => {
     const params = {
@@ -160,6 +166,25 @@ exports.broadcastPostCalls = async (postCalls) => {
     }
 };
 
+exports.postToConnection = async (apigwManagementApi, connectionId, payload) => {
+    try {
+        await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) }).promise();
+    } catch (e) {
+
+        if (e.statusCode === 410) {
+            console.log(`Found stale connection, deleting ${connectionId}`);
+            await this.offline(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
+        } else if (e.statusCode === 400) {
+            console.log(`Found invalid connection, deleting ${connectionId}`);
+            await this.offline(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
+        } else {
+            console.log('postToConnection: ' + JSON.stringify(e));
+            throw e;
+        }
+    }
+};
+
+
 /** method handlers */
 exports.broadcastOffersDelete = async (apigwManagementApi, offerIds) => {
     const connections = await this.getConnections();
@@ -201,6 +226,18 @@ exports.broadcastOffersOnline = async (apigwManagementApi, offerIds, ownerConnec
     }));
 };
 
+exports.setOffersConnectionId = async (offers, connectionId) => {
+    try {
+        var putCalls = offers.map(async offer => {
+                offer.connectionId = connectionId;
+                await ddb.put({ TableName: process.env.OFFER_TABLE_NAME, Item: offer }).promise();
+            });
+        await Promise.all(putCalls);
+
+    } catch (e) {
+        console.log('setOffersOnline failed: ' + JSON.stringify(e));
+    }
+};
 
 exports.deleteOffers = async (apigwManagementApi, connectionId, offerIds, notify) => {
 
@@ -230,27 +267,20 @@ exports.deleteOffers = async (apigwManagementApi, connectionId, offerIds, notify
             await this.broadcastOffersDelete(apigwManagementApi, offerIds);
         }
     } catch (e) {
-        console.log('deleteOffers: ' + JSON.stringify(e));
+        console.log('deleteOffers failed: ' + JSON.stringify(e));
         throw e;
     }
 };
 
 exports.offline = async (apigwManagementApi, connectionId, notify) => {
     const connection = await this.getConnection(connectionId);
-    console.log('connection: '+JSON.stringify(connection));
     const trace = await this.getTrace(connection.token);
-    console.log('trace: '+JSON.stringify(trace));
     const offers = await this.getOffersByIds(trace.offers);
-    console.log('offers: '+JSON.stringify(offers));
 
     try {
         trace.connectionId = "";
         await ddb.put({ TableName: process.env.TRACE_TABLE_NAME, Item: trace }).promise();
-        var putCalls = offers.map(async offer => {
-            offer.connectionId = "";
-            await ddb.put({ TableName: process.env.OFFER_TABLE_NAME, Item: offer }).promise();
-        });
-        await Promise.all(putCalls);
+        await this.setOffersConnectionId(offers, trace.connectionId);
         await ddb.delete({ TableName: process.env.CONN_TABLE_NAME, Key: { connectionId } }).promise();
         if (notify) {
             await this.broadcastOffersOffline(apigwManagementApi, trace.offers);

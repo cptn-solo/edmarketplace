@@ -1,34 +1,21 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Subject } from 'rxjs/internal/Subject';
 import { takeUntil } from 'rxjs/operators';
+import { TradeItem } from 'src/app/datamodels/tradeitem';
 import { DEFAULT_USER_INFO, UserInfo } from 'src/app/datamodels/userinfo';
 import { OfferService } from 'src/app/services/offer.service';
-import { TradeItem } from '../../datamodels/tradeitem';
 
 @Component({
-  selector: 'app-tradeitemslist',
-  templateUrl: './tradeitemslist.component.html',
-  styleUrls: ['./tradeitemslist.component.scss']
+  selector: 'app-mytradeitemsedit',
+  templateUrl: './mytradeitemsedit.component.html',
+  styleUrls: ['./mytradeitemsedit.component.scss', '../offers/offers.component.scss']
 })
-export class TradeitemslistComponent implements OnDestroy {
+export class MytradeitemseditComponent implements OnInit {
 
   private ngUnsubscribe = new Subject();
 
-  userinfo: UserInfo = DEFAULT_USER_INFO;
-
   items: Array<TradeItem> = [];
-
-  addeditem: TradeItem = {
-    tradeid: -1,
-    sid: "",
-    sname: "",
-    sstock: 0,
-    supply: 0,
-    did: "",
-    dname: "",
-    dstock: 0,
-    demand: 0
-  };
+  userinfo: UserInfo = DEFAULT_USER_INFO;
 
   constructor(private offers: OfferService) {
     this.offers.items$
@@ -37,14 +24,9 @@ export class TradeitemslistComponent implements OnDestroy {
     this.offers.userInfo$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(val => this.userinfo = val);
-  }
-  updateinfo() {
-    this.offers.updateUserInfo(this.userinfo);
+
   }
 
-  add() {
-    this.offers.addItem(this.addeditem);
-  }
   switchsides(item: TradeItem) {
     var switchedItem = Object.assign({}, {
       tradeid: item.tradeid,
@@ -87,6 +69,10 @@ export class TradeitemslistComponent implements OnDestroy {
   ngOnDestroy(): void {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  ngOnInit(): void {
+
   }
 
 }

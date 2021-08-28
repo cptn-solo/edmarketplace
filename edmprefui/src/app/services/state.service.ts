@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
+import { ChatMessage } from '../datamodels/chatmessage';
 import { TradeItem } from '../datamodels/tradeitem';
 import { UserInfo, DEFAULT_USER_INFO, Offer } from '../datamodels/userinfo';
 import { StorageService } from './storage.service';
@@ -8,6 +9,9 @@ const USER_INFO_KEY = 'USER_INFO';
 const OFFERS_KEY = 'OFFERS';
 const TOKEN_KEY = 'TRACE_TOKEN';
 const CONNECTION_KEY = 'CONNECTION_KEY';
+const PANELS_KEY = 'PANELS'; // offers view expandable panels state
+const CHATMESSAGES_KEY = 'CHAT';
+const MAX_CHAT_MESSAGES_COUNT = 100;
 @Injectable({
   providedIn: 'root'
 })
@@ -17,6 +21,8 @@ export class StateService {
   private _offers$ = new BehaviorSubject<Array<Offer>>([]);
   private _traceToken$ = new BehaviorSubject<string>('');
   private _connectionId$ = new BehaviorSubject<string>('');
+  private _panels$ = new BehaviorSubject<Array<string>>([]);
+  private _chat$ = new BehaviorSubject<Array<ChatMessage>>([]);
 
   private _getoffersReset = false;
 
@@ -24,17 +30,23 @@ export class StateService {
   public offers$ = this._offers$.asObservable();
   public traceToken$ = this._traceToken$.asObservable();
   public connectionId$ = this._connectionId$.asObservable();
+  public panels$ = this._panels$.asObservable();
+  public chat$ = this._chat$.asObservable();
 
   constructor(private storage: StorageService) {
     var userInfo = this.storage.loadInfo(USER_INFO_KEY) as unknown as UserInfo??DEFAULT_USER_INFO;
     var offers = this.storage.loadInfo(OFFERS_KEY) as unknown as Array<Offer>??[];
     var traceToken = this.storage.loadInfo(TOKEN_KEY) as unknown as string??'';
     var connectionId = this.storage.loadInfo(CONNECTION_KEY) as unknown as string??'';
+    var panels = this.storage.loadInfo(PANELS_KEY) as unknown as Array<string>??['info'];
+    var chatMessages = this.storage.loadInfo(CHATMESSAGES_KEY) as unknown as Array<ChatMessage>??[];
 
     this._userInfo$.next(userInfo);
     this._offers$.next(offers);
     this._traceToken$.next(traceToken);
     this._connectionId$.next(connectionId);
+    this._panels$.next(panels);
+    this._chat$.next(chatMessages);
 
     // subscribing after initial load to persist all future updates
     // TODO: add throttling to cache changes
@@ -42,6 +54,8 @@ export class StateService {
     this.offers$.subscribe(val => this.storage.setInfo(val, OFFERS_KEY));
     this.traceToken$.subscribe(val => this.storage.setInfo(val, TOKEN_KEY));
     this.connectionId$.subscribe(val => this.storage.setInfo(val, CONNECTION_KEY));
+    this.panels$.subscribe(val => this.storage.setInfo(val, PANELS_KEY));
+    this.chat$.subscribe(val => this.storage.setInfo(val, CHATMESSAGES_KEY));
   }
 
   registerUserTraceToken(token: string) {
@@ -111,17 +125,22 @@ export class StateService {
   processOneInboundOffer(offer: Offer, offers: Array<Offer>) {
     // note: inbound offers have empty token value
 
-    if (offer.offerId === this._userInfo$.value.offerId) return; // skip my own offer broadcast
+    if (offer.offerId === this._userInfo$.value.offerId) {
+      var userinfo = this._userInfo$.value;
+      userinfo.bids = offer.bids;
+      this._userInfo$.next(userinfo);
+      return; // skip my own offer broadcast
+    }
 
     var idxExisting = offers.findIndex(o => o.offerId === offer.offerId);
     if (idxExisting >= 0) {
-      offers[idxExisting].items = offer.items;
+      offers[idxExisting] = offer;
     } else {
       offers.push(offer);
     }
   }
 
-  processUserOffer(offers: Array<Offer>): boolean {
+  processUserOffer(offers: Array<Offer>) {
     // returns true if nothing to publish (server data overrites user's data)
     var userInfo = this._userInfo$.value;
     if (userInfo.items.length === 0 && offers.length !== 0) {
@@ -131,11 +150,9 @@ export class StateService {
       userInfo.location = defaultOffer.info.location;
       userInfo.created = defaultOffer.created;
       userInfo.expired = defaultOffer.expired;
+      userInfo.offerId = defaultOffer.offerId;
       this.updateUserInfo(userInfo);
-    } else if (userInfo.published) {
-      return false;
     }
-    return true;
   }
 
   updateUserTradeItems(items: Array<TradeItem>) {
@@ -153,6 +170,39 @@ export class StateService {
       userInfo.items = items??[]; // to be able to update UserInfo separately from items array
     }
     this._userInfo$.next(userInfo);
+  }
+
+  updateTradePanelsState(panels: Array<string>) {
+    this._panels$.next(panels);
+  }
+
+  getOfferById(offerId: string) {
+    return this._offers$.value.find(offer => offer.offerId === offerId);
+  }
+
+  processInboundMessage(message: ChatMessage) {
+    var messages = this._chat$.value;
+    messages.push(message);
+    if (messages.length >= MAX_CHAT_MESSAGES_COUNT)
+      messages = messages.slice(messages.length - MAX_CHAT_MESSAGES_COUNT, messages.length);
+    this._chat$.next(messages);
+  }
+
+  addOtboundMessage(message: ChatMessage): ChatMessage {
+    var messages = this._chat$.value;
+    var toadd: ChatMessage = Object.assign(message, { inbound: false });
+    messages.push(toadd);
+    if (messages.length >= MAX_CHAT_MESSAGES_COUNT)
+      messages = messages.slice(messages.length - MAX_CHAT_MESSAGES_COUNT, messages.length);
+    this._chat$.next(messages);
+    return toadd;
+  }
+
+  getMessagesByOfferId(offerId: string) {
+    var messages = this._chat$.value
+      .filter(m => m.offerId === offerId)
+      .sort((m1, m2) => m1.date - m2.date);
+    return messages;
   }
 
 }

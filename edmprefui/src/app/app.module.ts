@@ -4,7 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { MyofferComponent } from './components/myoffer/myoffer.component';
-import { TradeitemslistComponent } from './components/tradeitemslist/tradeitemslist.component';
+import { TradeComponent } from './components/trade/trade.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -18,14 +18,24 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatDialogModule, MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
+import { MatBadgeModule } from '@angular/material/badge';
 import { FormsModule } from '@angular/forms';
 import { OffersComponent } from './components/offers/offers.component';
+import { MyinfoeditComponent } from './components/myinfoedit/myinfoedit.component';
+import { TradeitemeditComponent } from './components/tradeitemedit/tradeitemedit.component';
+import { MytradeitemseditComponent } from './components/mytradeitemsedit/mytradeitemsedit.component';
+import { ChatdialogComponent } from './components/chatdialog/chatdialog.component';
 @NgModule({
   declarations: [
     AppComponent,
     MyofferComponent,
-    TradeitemslistComponent,
-    OffersComponent
+    TradeComponent,
+    OffersComponent,
+    MyinfoeditComponent,
+    TradeitemeditComponent,
+    MytradeitemseditComponent,
+    ChatdialogComponent
   ],
   imports: [
     BrowserModule,
@@ -42,9 +52,19 @@ import { OffersComponent } from './components/offers/offers.component';
     MatListModule,
     MatChipsModule,
     MatSlideToggleModule,
+    MatDialogModule,
+    MatBadgeModule,
     FormsModule,
   ],
-  providers: [],
+  providers: [
+    { provide: MAT_DIALOG_DEFAULT_OPTIONS,
+      useValue: {
+        // panelClass: "mat-app-background",
+        // backdropClass: "mat-app-background",
+        hasBackdrop: true
+      }
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
