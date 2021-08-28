@@ -1,0 +1,23 @@
+.mat-form-field {
+    width: 100%;
+}
+.mat-dialog-content {
+    height: 270px;
+}
+.mat-dialog-actions {
+    padding-top: 16px;
+}
+.chat-message-text {
+    width: 80%;
+}
+.chat-in, .chat-out {
+    display: flex;
+}
+.chat-in {
+    justify-content: flex-end;
+    text-align: right;
+}
+.chat-out {
+    justify-content: flex-start;
+    text-align: left;
+}

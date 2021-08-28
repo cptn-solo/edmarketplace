@@ -21,7 +21,9 @@ exports.offer = async event => {
                 const trace = await getOrCreateUserTrace(connectionid, eventBody.data.payload.token);
                 // 2. post last known user's offer back to him
                 const offers = await postEnlistResponce(apigwManagementApi, trace);
-                // 3. post notify connected users on offer went online
+                // 3. set offers online
+                await shared.setOffersConnectionId(offers, connectionid);
+                // 4. post notify connected users on offer went online
                 await broadcastOfferWentOnline(apigwManagementApi, trace);
                 return { statusCode: 200, body: JSON.stringify({ trace, offers })};
             }

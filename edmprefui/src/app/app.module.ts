@@ -18,11 +18,14 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatDialogModule, MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
+import { MatBadgeModule } from '@angular/material/badge';
 import { FormsModule } from '@angular/forms';
 import { OffersComponent } from './components/offers/offers.component';
 import { MyinfoeditComponent } from './components/myinfoedit/myinfoedit.component';
 import { TradeitemeditComponent } from './components/tradeitemedit/tradeitemedit.component';
 import { MytradeitemseditComponent } from './components/mytradeitemsedit/mytradeitemsedit.component';
+import { ChatdialogComponent } from './components/chatdialog/chatdialog.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -31,7 +34,8 @@ import { MytradeitemseditComponent } from './components/mytradeitemsedit/mytrade
     OffersComponent,
     MyinfoeditComponent,
     TradeitemeditComponent,
-    MytradeitemseditComponent
+    MytradeitemseditComponent,
+    ChatdialogComponent
   ],
   imports: [
     BrowserModule,
@@ -48,9 +52,19 @@ import { MytradeitemseditComponent } from './components/mytradeitemsedit/mytrade
     MatListModule,
     MatChipsModule,
     MatSlideToggleModule,
+    MatDialogModule,
+    MatBadgeModule,
     FormsModule,
   ],
-  providers: [],
+  providers: [
+    { provide: MAT_DIALOG_DEFAULT_OPTIONS,
+      useValue: {
+        // panelClass: "mat-app-background",
+        // backdropClass: "mat-app-background",
+        hasBackdrop: true
+      }
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

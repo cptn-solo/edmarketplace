@@ -1,5 +1,9 @@
 <mat-accordion class="example-headers-align" multi>
-    <mat-expansion-panel><!-- My Offer Info -->
+    <!-- My Offer Info -->
+    <mat-expansion-panel
+        [expanded]="panelState('info')"
+        (opened)="setPanelState('info', true)"
+        (closed)="setPanelState('info', false)">
         <mat-expansion-panel-header>
             <mat-panel-title>My Offer Info</mat-panel-title>
             <mat-panel-description>Share your location and contact info</mat-panel-description>
@@ -12,7 +16,11 @@
                 (click)="myinfoedit.updateinfo();tradeitemspanel.expanded=true;">Save</button>
         </mat-action-row>
     </mat-expansion-panel>
-    <mat-expansion-panel><!-- New item -->
+    <!-- New item -->
+    <mat-expansion-panel
+        [expanded]="panelState('additem')"
+        (opened)="setPanelState('additem', true)"
+        (closed)="setPanelState('additem', false)">
         <mat-expansion-panel-header>
             <mat-panel-title>New item</mat-panel-title>
             <mat-panel-description>Add something to your Offer</mat-panel-description>
@@ -25,7 +33,11 @@
                 (click)="tradeitemedit.add();tradeitemspanel.expanded=true;">Add Item</button>
         </mat-action-row>
     </mat-expansion-panel>
-    <mat-expansion-panel #tradeitemspanel [expanded]="true"><!-- Trade items -->
+    <!-- Trade items -->
+    <mat-expansion-panel #tradeitemspanel
+        [expanded]="panelState('items')"
+        (opened)="setPanelState('items', true)"
+        (closed)="setPanelState('items', false)">
         <mat-expansion-panel-header>
             <mat-panel-title>Trade items</mat-panel-title>
             <mat-panel-description>Your current supply and demand</mat-panel-description>
@@ -38,8 +50,12 @@
         </mat-action-row>
 
     </mat-expansion-panel>
-    <mat-expansion-panel>
-        <mat-expansion-panel-header><!-- All offers -->
+    <!-- All offers -->
+    <mat-expansion-panel
+        [expanded]="panelState('offers')"
+        (opened)="setPanelState('offers', true)"
+        (closed)="setPanelState('offers', false)">
+        <mat-expansion-panel-header>
             <mat-panel-title>All offers</mat-panel-title>
             <mat-panel-description>Currently available offers</mat-panel-description>
         </mat-expansion-panel-header>

@@ -1,52 +1,46 @@
-import { Component } from '@angular/core';
-import { OfferService } from 'src/app/services/offer.service';
-import { TradeItem } from '../../datamodels/tradeitem';
-
+import { Component, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs/internal/Subject';
+import { takeUntil } from 'rxjs/operators';
+import { StateService } from 'src/app/services/state.service';
 @Component({
   selector: 'app-trade',
   templateUrl: './trade.component.html',
   styleUrls: ['./trade.component.scss']
 })
-export class TradeComponent {
+export class TradeComponent implements OnDestroy {
 
-  constructor(private offers: OfferService) {
+  panels: Array<string> = []; // expanded panels
+
+  private ngUnsubscribe = new Subject();
+
+  constructor(
+    private state: StateService) {
+
+    this.state.panels$
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe(val => this.panels = val);
   }
 
-  switchsides(item: TradeItem) {
-    var switchedItem = Object.assign({}, {
-      tradeid: item.tradeid,
-      sid: item.did,
-      sname: item.dname,
-      sstock: item.dstock,
-      supply: item.demand,
-      did: item.sid,
-      dname: item.sname,
-      dstock: item.sstock,
-      demand: item.supply
-    })
-    this.offers.updateItem(switchedItem);
+  panelState(panel: string): boolean {
+    return this.panels.findIndex(p => p === panel) >= 0;
   }
 
-  change(field: string, increment: number, element: TradeItem) {
-    switch (field) {
-      case 'supply': {
-        if (0 < element.supply + increment && element.supply + increment < 1000) {
-          element.supply+=increment;
-        }
-        break;
-      }
-      default: {
-        if (0 < element.demand + increment && element.demand + increment < 1000) {
-          element.demand+=increment;
-        }
-        break;
-      }
+  setPanelState(panel: string, expanded: boolean) {
+    const idx = this.panels.findIndex(p => p === panel);
+    if (idx >= 0 && !expanded) {
+      this.panels.splice(idx, 1);
+    } else if (idx <0 && expanded) {
+      this.panels.push(panel);
     }
-    this.offers.updateItem(element);
+    this.state.updateTradePanelsState(this.panels);
   }
 
-  delete(item: TradeItem) {
-    this.offers.deleteItem(item.tradeid);
+  /* lifesycle */
+
+  ngOnDestroy(): void {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
+
 
 }
