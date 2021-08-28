@@ -20,12 +20,17 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDialogModule, MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatMenuModule } from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
 import { OffersComponent } from './components/offers/offers.component';
 import { MyinfoeditComponent } from './components/myinfoedit/myinfoedit.component';
 import { TradeitemeditComponent } from './components/tradeitemedit/tradeitemedit.component';
 import { MytradeitemseditComponent } from './components/mytradeitemsedit/mytradeitemsedit.component';
 import { ChatdialogComponent } from './components/chatdialog/chatdialog.component';
+import { HttpClientModule } from '@angular/common/http';
+import { TranslocoRootModule } from './transloco/transloco-root.module';
+import { LocalesComponent } from './components/locales/locales.component';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -35,7 +40,8 @@ import { ChatdialogComponent } from './components/chatdialog/chatdialog.componen
     MyinfoeditComponent,
     TradeitemeditComponent,
     MytradeitemseditComponent,
-    ChatdialogComponent
+    ChatdialogComponent,
+    LocalesComponent
   ],
   imports: [
     BrowserModule,
@@ -54,7 +60,10 @@ import { ChatdialogComponent } from './components/chatdialog/chatdialog.componen
     MatSlideToggleModule,
     MatDialogModule,
     MatBadgeModule,
+    MatMenuModule,
     FormsModule,
+    HttpClientModule,
+    TranslocoRootModule,
   ],
   providers: [
     { provide: MAT_DIALOG_DEFAULT_OPTIONS,

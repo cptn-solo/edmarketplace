@@ -1,39 +1,40 @@
+<ng-container *transloco="let t">
 <mat-toolbar>
     <button mat-raised-button
         *ngIf="connected"
         (click)="getoffers()">
-        Reload
+        {{t('Reload')}}
     </button>
     <span class="toolbar-spacer"></span>
-    <mat-slide-toggle [(ngModel)]="onlymatched" (change)="applyCurrentFilters()">Only matched</mat-slide-toggle>
+    <mat-slide-toggle [(ngModel)]="onlymatched" (change)="applyCurrentFilters()">{{t('Only matched')}}</mat-slide-toggle>
 </mat-toolbar>
 <div>
     <div class="offers-header">
-        <div class="left-header"><span>Supply</span></div>
+        <div class="left-header"><span>{{t('Supply')}}</span></div>
         <div class="settings">&nbsp;</div>
-        <div class="right-header"><span>Demand</span></div>
+        <div class="right-header"><span>{{t('Demand')}}</span></div>
         <div class="settings">&nbsp;</div>
     </div>
     <div class="offer" *ngFor="let offer of filteredOffers">
         <input #bidstage type="hidden" [value]="getBidStage(offer)"/>
         <div class="offer-header">
-            <div class="left-offer-info">{{offer.info.location}} : {{offer.info.nickname}}</div>
+            <div class="left-offer-info">{{offer.info.nickname}} : {{offer.info.location}}</div>
             <div class="right-offer-info" *ngIf="!!userInfo.offerId">
-                <button mat-button title="Recall Bid from Offer"
+                <button mat-button title="{{t('Recall Bid from Offer')}}"
                     *ngIf="bidstage.value === 'wait' || bidstage.value === 'message'" color="warn"
-                    (click)="bidpull(offer)">Pull Bid</button>
-                <button mat-button title="Bid on Offer" color="accent"
+                    (click)="bidpull(offer)">{{t('Pull Bid')}}</button>
+                <button mat-button title="{{t('Bid on Offer')}}" color="accent"
                     *ngIf="bidstage.value === 'bid'"
-                    (click)="bidpush(offer)">Push Bid</button>
-                <button mat-button title="Accept Bid" color="accent"
+                    (click)="bidpush(offer)">{{t('Push Bid')}}</button>
+                <button mat-button title="{{t('Accept Inbound Bid')}}" color="accent"
                     *ngIf="bidstage.value === 'accept'"
-                    (click)="bidpush(offer)">Accept Bid</button>
-                <button mat-button title="Send Message" color="accent"
+                    (click)="bidpush(offer)">{{t('Accept Bid')}}</button>
+                <button mat-button title="{{t('Send Message')}}" color="accent"
                     *ngIf="bidstage.value === 'message'"
-                    (click)="openChatDialog(offer)">Chat</button>
+                    (click)="openChatDialog(offer)">{{t('Chat')}}</button>
                 <mat-icon title="Accept pending" color="accent"
                     *ngIf="bidstage.value === 'wait'">schedule</mat-icon>
-                <mat-icon title="{{ offer.connectionId.length ? 'Online' : 'Offline' }}"
+                <mat-icon title="{{ t(offer.connectionId.length ? 'Online' : 'Offline') }}"
                     matBadge="!" matBadgeColor="warn" matBadgeHidden="{{!showBadge(offer)}}"
                     color="{{ offer.connectionId.length ? 'accent' : '' }}"
                     *ngIf="bidstage.value === 'message'">wifi</mat-icon>
@@ -42,7 +43,7 @@
         <div *ngFor="let item of offer.items" class="offer-items">
             <div class="supply-items">
                 <mat-chip-list>
-                    <mat-chip color="{{checkMatch(item, false) ? 'accent' :'primary'}}" selected>{{item.sname}}&nbsp;&nbsp;<b>{{item.supply}}</b></mat-chip>
+                    <mat-chip color="{{checkMatch(item, false) ? 'accent' :'primary'}}" selected>{{t(item.sid)}}&nbsp;&nbsp;<b>{{item.supply}}</b></mat-chip>
                 </mat-chip-list>
             </div>
             <div class="settings">
@@ -52,10 +53,11 @@
             </div>
             <div class="demand-items">
                 <mat-chip-list>
-                    <mat-chip color="{{checkMatch(item, true) ? 'accent' :'primary'}}" selected><b>{{item.demand}}</b>&nbsp;&nbsp;{{item.dname}}</mat-chip>
+                    <mat-chip color="{{checkMatch(item, true) ? 'accent' :'primary'}}" selected><b>{{item.demand}}</b>&nbsp;&nbsp;{{t(item.did)}}</mat-chip>
                 </mat-chip-list>
             </div>
             <div class="settings">&nbsp;</div>
         </div>
     </div>
 </div>
+</ng-container>

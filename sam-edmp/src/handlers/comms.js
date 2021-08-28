@@ -86,47 +86,55 @@ async function forwardMessage (apigwManagementApi, connectionId, token, message)
         console.log('forwardMessage: ' + JSON.stringify(payload));
 
     } catch (e) {
-        console.log('forwardMessage failed: ' + e.message)
+        console.log('forwardMessage failed: ' + e.message);
         return false;
     }
 
     return true;
-};
+}
 
 async function addOrRemoveBid (apigwManagementApi, connectionId, token, offerId, addMode) {
     const trace = await shared.getTrace(token);
 
-    if (trace.offers.length === 0) return false; // no my offer
+    try {
+        if (trace.offers.length === 0)
+            throw new Error('no my offer');
 
-    const offer = await shared.getOffer(offerId);
+        const offer = await shared.getOffer(offerId);
 
-    if (!offer) return false; // no their offer
+        if (!offer)
+            throw new Error('no their offer');
 
-    // default offer untill multioffer implementation. for now only multiitem
-    // implemented (one offer per user, any supply:demand pairs per offer)
-    const myOfferId = trace.offers[0];
-    if (!offer.bids || offer.bids === undefined) {
-        offer.bids = [];
+        // default offer untill multioffer implementation. for now only multiitem
+        // implemented (one offer per user, any supply:demand pairs per offer)
+        const myOfferId = trace.offers[0];
+        if (!offer.bids || offer.bids === undefined) {
+            offer.bids = [];
+        }
+        const idx = offer.bids.findIndex(b => b === myOfferId);
+        if (idx < 0 && addMode) {
+            offer.bids.push(myOfferId);
+        } else if (idx >= 0 && !addMode) {
+            offer.bids.splice(idx, 1);
+            // TODO: leave this method to prevent spamming.
+            // for now just for debug purposes we push event to parties even
+            // if a bid already added to an offer
+        } else {
+            throw new Error('no need to communicate');
+        }
+        await shared.putOffer(offer);
+        const code = addMode ? shared.COMMS_METHOD_BIDPUSH : shared.COMMS_METHOD_BIDPULL;
+        const payload = { code , offer };
+        // both sides should get notified about bid being placed/removed
+        await Promise.all([
+            shared.postToConnection(apigwManagementApi, offer.connectionId, payload),
+            shared.postToConnection(apigwManagementApi, connectionId, payload)
+        ]);
+    } catch (e) {
+        console.log('addOrRemoveBid failed: ' + e.message);
+        return false;
     }
-    const idx = offer.bids.findIndex(b => b === myOfferId);
-    if (idx < 0 && addMode) {
-        offer.bids.push(myOfferId);
-    } else if (idx >= 0 && !addMode) {
-        offer.bids.splice(idx, 1);
-        // TODO: leave this method to prevent spamming.
-        // for now just for debug purposes we push event to parties even
-        // if a bid already added to an offer
-    } else {
-        return false; // no need to communicate
-    }
-    await shared.putOffer(offer);
-    const code = addMode ? shared.COMMS_METHOD_BIDPUSH : shared.COMMS_METHOD_BIDPULL;
-    const payload = { code , offer };
-    // both sides should get notified about bid being placed/removed
-    await Promise.all([
-        shared.postToConnection(apigwManagementApi, offer.connectionId, payload),
-        shared.postToConnection(apigwManagementApi, connectionId, payload)
-    ]);
+
 
     return true;
-};
+}

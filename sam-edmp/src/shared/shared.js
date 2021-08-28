@@ -168,6 +168,8 @@ exports.broadcastPostCalls = async (postCalls) => {
 
 exports.postToConnection = async (apigwManagementApi, connectionId, payload) => {
     try {
+        if (!connectionId || connectionId === undefined || connectionId.length === 0)
+            throw new Error('no connection to post to')
         await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) }).promise();
     } catch (e) {
 
@@ -178,8 +180,7 @@ exports.postToConnection = async (apigwManagementApi, connectionId, payload) => 
             console.log(`Found invalid connection, deleting ${connectionId}`);
             await this.offline(apigwManagementApi, connectionId, false); // won't notify other users to avoid spamming and recursion
         } else {
-            console.log('postToConnection: ' + JSON.stringify(e));
-            throw e;
+            console.log('postToConnection: ' + (e.message || JSON.stringify(e)));
         }
     }
 };
