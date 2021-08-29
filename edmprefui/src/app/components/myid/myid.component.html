@@ -1,0 +1,21 @@
+<ng-container *transloco="let t">
+    <div class="basic-container mat-typography">
+        <div>
+            <h3>{{t('You can use this ID to get access to your offers from other devices.')}}</h3>
+            <h3 class="warn-color">{{t('Losing this ID means losing your offers. Take care of it.')}}</h3>
+            <mat-form-field appearance="outline" style="width: 100%;">
+                <mat-label>{{t('My ED Marketplace ID')}}</mat-label>
+                <input matInput
+                    maxLength="100"
+                    [(ngModel)]="token">
+                <mat-hint class="warn-color">{{t("Don't share your ID with other playes!")}}</mat-hint>
+            </mat-form-field>
+            <h3>{{t('Please connect with this ID from one device at a time to avoid data conflicts.')}}</h3>
+        </div>
+        <div class="tools">
+            <button mat-raised-button
+                color="{{this.token && this.token.length > 0 ? 'accent' : ''}}"
+                (click)="saveId()">{{t('Apply this ID')}}</button>
+        </div>
+    </div>
+</ng-container>

@@ -34,6 +34,7 @@ import { LocalesComponent } from './components/locales/locales.component';
 import { TradeitemComponent } from './components/tradeitem/tradeitem.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
+import { MyidComponent } from './components/myid/myid.component';
 
 @NgModule({
   declarations: [
@@ -46,7 +47,8 @@ import { environment } from '../environments/environment';
     MytradeitemseditComponent,
     ChatdialogComponent,
     LocalesComponent,
-    TradeitemComponent
+    TradeitemComponent,
+    MyidComponent
   ],
   imports: [
     BrowserModule,

@@ -19,6 +19,7 @@ export class AppComponent implements OnDestroy, OnInit {
 
   navItems = [
     { url: 'myoffer', name: 'Offers'},
+    { url: 'myid', name: 'My ID'},
   ];
 
 
@@ -41,6 +42,10 @@ export class AppComponent implements OnDestroy, OnInit {
     this.mobileQuery = media.matchMedia('(max-width: 600px)');
     this._mobileQueryListener = () => changeDetectorRef.detectChanges();
     this.mobileQuery.addListener(this._mobileQueryListener);
+  }
+
+  tokenEntryDialog() {
+
   }
 
   ngOnInit() {
