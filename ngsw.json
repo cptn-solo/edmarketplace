@@ -1,0 +1,93 @@
+{
+  "configVersion": 1,
+  "timestamp": 1630271925345,
+  "index": "/edmarketplace/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/edmarketplace/favicon.ico",
+        "/edmarketplace/index.html",
+        "/edmarketplace/main.30cb08beedc8df08833e.js",
+        "/edmarketplace/manifest.webmanifest",
+        "/edmarketplace/polyfills.81e561f5da53a653ce8d.js",
+        "/edmarketplace/runtime.d3cf44c40a7d8b29e6df.js",
+        "/edmarketplace/styles.3991dbd809392d30e63a.css"
+      ],
+      "patterns": []
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/edmarketplace/assets/i18n/de.json",
+        "/edmarketplace/assets/i18n/en.json",
+        "/edmarketplace/assets/i18n/es.json",
+        "/edmarketplace/assets/i18n/fr.json",
+        "/edmarketplace/assets/i18n/pt.json",
+        "/edmarketplace/assets/i18n/ru.json",
+        "/edmarketplace/assets/icons/icon-128x128.png",
+        "/edmarketplace/assets/icons/icon-144x144.png",
+        "/edmarketplace/assets/icons/icon-152x152.png",
+        "/edmarketplace/assets/icons/icon-192x192.png",
+        "/edmarketplace/assets/icons/icon-384x384.png",
+        "/edmarketplace/assets/icons/icon-512x512.png",
+        "/edmarketplace/assets/icons/icon-72x72.png",
+        "/edmarketplace/assets/icons/icon-96x96.png"
+      ],
+      "patterns": []
+    }
+  ],
+  "dataGroups": [],
+  "hashTable": {
+    "/edmarketplace/assets/i18n/de.json": "e11484a153d90f8a66bf266fe5ea041aa14f75cb",
+    "/edmarketplace/assets/i18n/en.json": "cdc8c3ca3b923cedbb1ff7abca2615631ec1e287",
+    "/edmarketplace/assets/i18n/es.json": "079168685795bd381daa5c1c26c1c1910664d3c6",
+    "/edmarketplace/assets/i18n/fr.json": "f1c8d69be34d6cf3a761efd9772bd3b8f9041300",
+    "/edmarketplace/assets/i18n/pt.json": "bfd815748769357ca95a7ffa9cfcd3e714126e4d",
+    "/edmarketplace/assets/i18n/ru.json": "b249d684c72064a0614b8085885fef8ec988d301",
+    "/edmarketplace/assets/icons/icon-128x128.png": "dae3b6ed49bdaf4327b92531d4b5b4a5d30c7532",
+    "/edmarketplace/assets/icons/icon-144x144.png": "b0bd89982e08f9bd2b642928f5391915b74799a7",
+    "/edmarketplace/assets/icons/icon-152x152.png": "7479a9477815dfd9668d60f8b3b2fba709b91310",
+    "/edmarketplace/assets/icons/icon-192x192.png": "1abd80d431a237a853ce38147d8c63752f10933b",
+    "/edmarketplace/assets/icons/icon-384x384.png": "329749cd6393768d3131ed6304c136b1ca05f2fd",
+    "/edmarketplace/assets/icons/icon-512x512.png": "559d9c4318b45a1f2b10596bbb4c960fe521dbcc",
+    "/edmarketplace/assets/icons/icon-72x72.png": "c457e56089a36952cd67156f9996bc4ce54a5ed9",
+    "/edmarketplace/assets/icons/icon-96x96.png": "3914125a4b445bf111c5627875fc190f560daa41",
+    "/edmarketplace/favicon.ico": "22f6a4a3bcaafafb0254e0f2fa4ceb89e505e8b2",
+    "/edmarketplace/index.html": "8efefa86020aa8ca60445defec8b67e076369cad",
+    "/edmarketplace/main.30cb08beedc8df08833e.js": "f81f567b895f8c71bd3e68d0a4d28749a8757b9b",
+    "/edmarketplace/manifest.webmanifest": "ae4807a19a4e7d026aa5708d7cc4defca63b27f3",
+    "/edmarketplace/polyfills.81e561f5da53a653ce8d.js": "fa7bd3d723f5a004ca7c0e2c37b505a213f9a4a8",
+    "/edmarketplace/runtime.d3cf44c40a7d8b29e6df.js": "6457ca4e977a3bd7b915671a9be93061b531afff",
+    "/edmarketplace/styles.3991dbd809392d30e63a.css": "b4da0edc9123490c715c7ecaaeb92aa04015ad9f"
+  },
+  "navigationUrls": [
+    {
+      "positive": true,
+      "regex": "^\\/.*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*\\.[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*\\/.*$"
+    }
+  ],
+  "navigationRequestStrategy": "performance"
+}
