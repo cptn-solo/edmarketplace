@@ -32,6 +32,8 @@ import { HttpClientModule } from '@angular/common/http';
 import { TranslocoRootModule } from './transloco/transloco-root.module';
 import { LocalesComponent } from './components/locales/locales.component';
 import { TradeitemComponent } from './components/tradeitem/tradeitem.component';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 
 @NgModule({
   declarations: [
@@ -69,6 +71,12 @@ import { TradeitemComponent } from './components/tradeitem/tradeitem.component';
     ReactiveFormsModule,
     HttpClientModule,
     TranslocoRootModule,
+    ServiceWorkerModule.register('ngsw-worker.js', {
+      enabled: environment.production,
+      // Register the ServiceWorker as soon as the app is stable
+      // or after 30 seconds (whichever comes first).
+      registrationStrategy: 'registerWhenStable:30000'
+    }),
   ],
   providers: [
     { provide: MAT_DIALOG_DEFAULT_OPTIONS,
