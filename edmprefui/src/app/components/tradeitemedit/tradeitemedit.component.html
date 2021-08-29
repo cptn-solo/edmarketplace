@@ -1,50 +1,26 @@
+<ng-container *transloco="let t">
 <div class="added-item">
-    <mat-form-field appearance="fill" class="item-name">
-        <mat-label>Supply Item Name</mat-label>
-        <input matInput [(ngModel)]="addeditem.sname">
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="item-code">
-        <mat-label>Supply Item Code</mat-label>
-        <input matInput [(ngModel)]="addeditem.sid">
-    </mat-form-field>
-    <div>
-        <mat-form-field appearance="fill" class="item-stock">
-            <mat-label>Supply Item Stock</mat-label>
-            <input matInput type="number" min="0" max="1000" step="1"
-                oninput="validity.valid||(value='0');"
-                [(ngModel)]="addeditem.sstock">
+    <form>
+        <mat-form-field class="item-code" appearance="fill">
+            <mat-label>{{t('Supply Item')}}</mat-label>
+            <input type="text" matInput [formControl]="sidControl" [matAutocomplete]="auto1">
+            <mat-autocomplete #auto1="matAutocomplete" [displayWith]="displayFn"
+                (optionSelected)="sidSelected($event)">
+                <mat-option *ngFor="let option of sidFilteredOptions | async" [value]="option">
+                  {{t(option)}}
+                </mat-option>
+              </mat-autocomplete>
         </mat-form-field>
-
-        <mat-form-field appearance="fill" class="item-stock">
-            <mat-label>Supply</mat-label>
-            <input matInput type="number" min="0" max="1000" step="1"
-                oninput="validity.valid||(value='0');"
-                [(ngModel)]="addeditem.supply">
+        <mat-form-field class="item-code" appearance="fill">
+            <mat-label>{{t('Demand Item')}}</mat-label>
+            <input type="text" matInput [formControl]="didControl" [matAutocomplete]="auto2">
+            <mat-autocomplete #auto2="matAutocomplete" [displayWith]="displayFn"
+                (optionSelected)="didSelected($event)">
+                <mat-option *ngFor="let option of didFilteredOptions | async" [value]="option">
+                  {{t(option)}}
+                </mat-option>
+              </mat-autocomplete>
         </mat-form-field>
-    </div>
-    <mat-form-field appearance="fill" class="item-name">
-        <mat-label>Demand Item Name</mat-label>
-        <input matInput [(ngModel)]="addeditem.dname">
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="item-code">
-        <mat-label>Demand Item Code</mat-label>
-        <input matInput [(ngModel)]="addeditem.did">
-    </mat-form-field>
-    <div>
-        <mat-form-field appearance="fill" class="item-stock">
-            <mat-label>Demand Item Stock</mat-label>
-            <input matInput type="number" min="0" max="1000" step="1"
-                oninput="validity.valid||(value='0');"
-                [(ngModel)]="addeditem.dstock">
-        </mat-form-field>
-
-        <mat-form-field appearance="fill" class="item-stock">
-            <mat-label>Demand</mat-label>
-            <input matInput type="number" min="0" max="1000" step="1"
-                oninput="validity.valid||(value='0');"
-                [(ngModel)]="addeditem.demand">
-        </mat-form-field>
-    </div>
+    </form>
 </div>
+</ng-container>

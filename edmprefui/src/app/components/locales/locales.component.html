@@ -1,0 +1,9 @@
+<button mat-button [matMenuTriggerFor]="menu" aria-label="Language switcher">
+    {{ currentVal }}
+</button>
+<mat-menu #menu="matMenu">
+    <button mat-menu-item *ngFor="let val of filteredLocales"
+        (click)="changeLocale(val)">
+        {{ val }}
+    </button>
+</mat-menu>

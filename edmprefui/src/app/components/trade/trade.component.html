@@ -1,3 +1,4 @@
+<ng-container *transloco="let t">
 <mat-accordion class="example-headers-align" multi>
     <!-- My Offer Info -->
     <mat-expansion-panel
@@ -5,32 +6,15 @@
         (opened)="setPanelState('info', true)"
         (closed)="setPanelState('info', false)">
         <mat-expansion-panel-header>
-            <mat-panel-title>My Offer Info</mat-panel-title>
-            <mat-panel-description>Share your location and contact info</mat-panel-description>
+            <mat-panel-title>{{t('My Offer Info')}}</mat-panel-title>
+            <mat-panel-description>{{t('Share your location and contact info')}}</mat-panel-description>
         </mat-expansion-panel-header>
 
         <app-myinfoedit #myinfoedit></app-myinfoedit>
 
         <mat-action-row>
             <button mat-button color="accent"
-                (click)="myinfoedit.updateinfo();tradeitemspanel.expanded=true;">Save</button>
-        </mat-action-row>
-    </mat-expansion-panel>
-    <!-- New item -->
-    <mat-expansion-panel
-        [expanded]="panelState('additem')"
-        (opened)="setPanelState('additem', true)"
-        (closed)="setPanelState('additem', false)">
-        <mat-expansion-panel-header>
-            <mat-panel-title>New item</mat-panel-title>
-            <mat-panel-description>Add something to your Offer</mat-panel-description>
-        </mat-expansion-panel-header>
-
-        <app-tradeitemedit #tradeitemedit></app-tradeitemedit>
-
-        <mat-action-row>
-            <button mat-button color="accent"
-                (click)="tradeitemedit.add();tradeitemspanel.expanded=true;">Add Item</button>
+                (click)="myinfoedit.updateinfo();tradeitemspanel.expanded=true;">{{t('Save')}}</button>
         </mat-action-row>
     </mat-expansion-panel>
     <!-- Trade items -->
@@ -39,13 +23,21 @@
         (opened)="setPanelState('items', true)"
         (closed)="setPanelState('items', false)">
         <mat-expansion-panel-header>
-            <mat-panel-title>Trade items</mat-panel-title>
-            <mat-panel-description>Your current supply and demand</mat-panel-description>
+            <mat-panel-title>{{t('Trade items')}}</mat-panel-title>
+            <mat-panel-description>{{t('Your current supply and demand')}}</mat-panel-description>
         </mat-expansion-panel-header>
 
         <app-mytradeitemsedit #mytradeitemsedit></app-mytradeitemsedit>
-
+        <div class="new-trade-item-panel" [ngStyle]="showAddItem ? null : {display: 'none'}">
+            <app-tradeitemedit #tradeitemedit></app-tradeitemedit>
+        </div>
         <mat-action-row>
+            <button mat-button color="accent" *ngIf="!showAddItem"
+                (click)="showAddItem = true">{{t('Add Item')}}</button>&nbsp;
+            <button mat-button color="accent" *ngIf="showAddItem"
+                (click)="tradeitemedit.add();showAddItem = false">{{t('Add')}}</button>&nbsp;
+            <button mat-button *ngIf="showAddItem"
+                (click)="showAddItem = false">{{t('Cancel')}}</button>&nbsp;
             <app-myoffer></app-myoffer>
         </mat-action-row>
 
@@ -56,9 +48,10 @@
         (opened)="setPanelState('offers', true)"
         (closed)="setPanelState('offers', false)">
         <mat-expansion-panel-header>
-            <mat-panel-title>All offers</mat-panel-title>
-            <mat-panel-description>Currently available offers</mat-panel-description>
+            <mat-panel-title>{{t('All offers')}}</mat-panel-title>
+            <mat-panel-description>{{t('Currently available offers')}}</mat-panel-description>
         </mat-expansion-panel-header>
         <app-offers></app-offers>
     </mat-expansion-panel>
 </mat-accordion>
+</ng-container>

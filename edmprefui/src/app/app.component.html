@@ -3,33 +3,35 @@
     <mat-toolbar style="height: 56px;">
         <button mat-icon-button (click)="snav.toggle()"><mat-icon>menu</mat-icon></button>
         &nbsp;
-        <span>{{title}}</span>
+        <span>{{'ED Market Place' | transloco}}</span>
         <span class="toolbar-spacer"></span>
 
+        <app-locales></app-locales>
+        &nbsp;
         <button mat-raised-button color="accent"
             *ngIf="!connected"
             [disabled]="connectdisabled"
             (click)="connect()">
-            Connect
+            {{'Connect' | transloco}}
         </button>
         <button mat-raised-button color="warn"
             *ngIf="connected"
             [disabled]="disconnectdisabled"
             (click)="disconnect()">
-            Disconnect
+            {{'Disconnect' | transloco}}
         </button>
     </mat-toolbar>
     <mat-sidenav-container class="app-sidenav-container"
                             [style.marginTop.px]="mobileQuery.matches ? 56 : 0">
         <mat-sidenav #snav [mode]="mobileQuery.matches ? 'over' : 'side'"
                     [fixedInViewport]="mobileQuery.matches" fixedTopGap="56">
-        <mat-nav-list>
-            <ng-container *ngFor="let item of navItems">
-                <a mat-list-item [routerLink]="item.url">
-                    {{item.name}}
-                </a>
-            </ng-container>
-        </mat-nav-list>
+            <mat-nav-list>
+                <ng-container *ngFor="let item of navItems">
+                    <a mat-list-item [routerLink]="item.url">
+                        {{item.name | transloco}}
+                    </a>
+                </ng-container>
+            </mat-nav-list>
         </mat-sidenav>
 
         <mat-sidenav-content>

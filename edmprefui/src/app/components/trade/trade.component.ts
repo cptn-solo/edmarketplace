@@ -10,6 +10,7 @@ import { StateService } from 'src/app/services/state.service';
 export class TradeComponent implements OnDestroy {
 
   panels: Array<string> = []; // expanded panels
+  showAddItem = false;
 
   private ngUnsubscribe = new Subject();
 

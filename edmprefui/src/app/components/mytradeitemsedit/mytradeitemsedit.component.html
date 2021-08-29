@@ -1,20 +1,21 @@
+<ng-container *transloco="let t">
 <div>
     <div class="offers-header">
-        <div class="left-header"><span>Supply</span></div>
+        <div class="left-header"><span>{{t('Supply')}}</span></div>
         <div class="settings">&nbsp;</div>
-        <div class="right-header"><span>Demand</span></div>
+        <div class="right-header"><span>{{t('Demand')}}</span></div>
         <div class="settings">&nbsp;</div>
     </div>
     <div class="offer">
         <div class="offer-header">
-            <div class="left-offer-info">{{userinfo.location}} : {{userinfo.nickname}}</div>
+            <div class="left-offer-info">{{userinfo.nickname}} : {{userinfo.location}}</div>
             <div class="right-offer-info">
             </div>
         </div>
         <div *ngFor="let item of items" class="offer-items">
             <div class="supply-items">
                 <mat-chip-list>
-                    <mat-chip color="primary">{{item.sname}}&nbsp;
+                    <mat-chip color="primary">{{t(item.sid)}}&nbsp;
                         <button mat-icon-button aria-label="Remove one"
                             (click)="change('supply', -1, item)">
                             <mat-icon>remove</mat-icon>
@@ -29,7 +30,7 @@
             </div>
             <div class="settings">
                 <button mat-icon-button color="warn"
-                    title="Switch trade item sides (don't forget to Update Offer)"
+                    title="{{t('Switch trade item sides (don\'t forget to Update Offer)')}}"
                     (click)="switchsides(item)">
                     <mat-icon>multiple_stop</mat-icon>
                 </button>
@@ -44,13 +45,13 @@
                         <button mat-icon-button aria-label="Add one" (click)="change('demand', +1, item)">
                             <mat-icon>add</mat-icon>
                         </button>
-                        &nbsp;{{item.dname}}
+                        &nbsp;{{t(item.did)}}
                     </mat-chip>
                 </mat-chip-list>
             </div>
             <div class="settings">
                 <button mat-icon-button color="warn"
-                    title="Remove item from your offer (don't forget to Update Offer)"
+                    title="{{t('Remove item from your offer (don\'t forget to Update Offer)')}}"
                     (click)="delete(item)">
                     <mat-icon>clear</mat-icon>
                 </button>
@@ -58,3 +59,4 @@
         </div>
     </div>
 </div>
+</ng-container>

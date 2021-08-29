@@ -11,6 +11,7 @@ const TOKEN_KEY = 'TRACE_TOKEN';
 const CONNECTION_KEY = 'CONNECTION_KEY';
 const PANELS_KEY = 'PANELS'; // offers view expandable panels state
 const CHATMESSAGES_KEY = 'CHAT';
+const CURRENT_LOCALE_KEY = 'LOCALE';
 const MAX_CHAT_MESSAGES_COUNT = 100;
 @Injectable({
   providedIn: 'root'
@@ -23,6 +24,7 @@ export class StateService {
   private _connectionId$ = new BehaviorSubject<string>('');
   private _panels$ = new BehaviorSubject<Array<string>>([]);
   private _chat$ = new BehaviorSubject<Array<ChatMessage>>([]);
+  private _locale$ = new BehaviorSubject<string>('EN');
 
   private _getoffersReset = false;
 
@@ -32,6 +34,7 @@ export class StateService {
   public connectionId$ = this._connectionId$.asObservable();
   public panels$ = this._panels$.asObservable();
   public chat$ = this._chat$.asObservable();
+  public locale$ = this._locale$.asObservable();
 
   constructor(private storage: StorageService) {
     var userInfo = this.storage.loadInfo(USER_INFO_KEY) as unknown as UserInfo??DEFAULT_USER_INFO;
@@ -40,6 +43,7 @@ export class StateService {
     var connectionId = this.storage.loadInfo(CONNECTION_KEY) as unknown as string??'';
     var panels = this.storage.loadInfo(PANELS_KEY) as unknown as Array<string>??['info'];
     var chatMessages = this.storage.loadInfo(CHATMESSAGES_KEY) as unknown as Array<ChatMessage>??[];
+    var locale = this.storage.loadInfo(CURRENT_LOCALE_KEY) as unknown as string??'EN';
 
     this._userInfo$.next(userInfo);
     this._offers$.next(offers);
@@ -47,6 +51,7 @@ export class StateService {
     this._connectionId$.next(connectionId);
     this._panels$.next(panels);
     this._chat$.next(chatMessages);
+    this._locale$.next(locale);
 
     // subscribing after initial load to persist all future updates
     // TODO: add throttling to cache changes
@@ -56,6 +61,11 @@ export class StateService {
     this.connectionId$.subscribe(val => this.storage.setInfo(val, CONNECTION_KEY));
     this.panels$.subscribe(val => this.storage.setInfo(val, PANELS_KEY));
     this.chat$.subscribe(val => this.storage.setInfo(val, CHATMESSAGES_KEY));
+    this.locale$.subscribe(val => this.storage.setInfo(val, CURRENT_LOCALE_KEY));
+  }
+
+  setCurrentLocale(val: string) {
+    this._locale$.next(val);
   }
 
   registerUserTraceToken(token: string) {

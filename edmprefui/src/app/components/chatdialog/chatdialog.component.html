@@ -1,5 +1,5 @@
-<h2 mat-dialog-title *ngIf="this.offer.offerId.length > 0">Chat with {{ offer.info.nickname }} from {{ offer.info.location }}</h2>
-<h2 mat-dialog-title *ngIf="this.offer.offerId.length === 0">Offer dropped</h2>
+<h2 mat-dialog-title *ngIf="this.offer.offerId.length > 0">{{ 'Chat with' | transloco: { nickname: offer.info.nickname, location: offer.info.location } }}</h2>
+<h2 mat-dialog-title *ngIf="this.offer.offerId.length === 0">{{'Offer dropped'  | transloco}}</h2>
 <mat-dialog-content class="mat-typography" #chatView>
   <div *ngFor="let message of messages" class="{{ message.inbound ? 'chat-in' : 'chat-out'}}">
     <span class="chat-message-text">{{ message.text }}</span>
@@ -7,10 +7,10 @@
 </mat-dialog-content>
 <mat-dialog-actions align="end">
     <mat-form-field appearance="fill" class="contact-info" style="width: 100%ß">
-        <mat-label>Message text</mat-label>
+        <mat-label>{{'Message text' | transloco}}</mat-label>
         <textarea matInput #contactInfo
             (keyup.enter)="sendMessage()"
-            placeholder="Dont share real name or any other sensitive information!"
+            placeholder="{{'Dont share real name or any other sensitive information!' | transloco}}"
             maxLength="200"
             [(ngModel)]="message">
         </textarea>
@@ -18,9 +18,9 @@
     </mat-form-field>
 </mat-dialog-actions>
 <mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close>Close</button>
+  <button mat-button mat-dialog-close>{{'Close' | transloco}}</button>
   <button mat-button cdkFocusInitial
     *ngIf="this.offer.offerId.length > 0"
     color="{{ canSend && connected ? 'accent' : '' }}"
-    (click)="sendMessage()">Send</button>
+    (click)="sendMessage()">{{'Send' | transloco}}</button>
 </mat-dialog-actions>
