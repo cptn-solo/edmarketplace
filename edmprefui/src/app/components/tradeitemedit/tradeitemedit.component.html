@@ -1,25 +1,27 @@
 <ng-container *transloco="let t">
 <div class="added-item">
     <form>
-        <mat-form-field class="item-code" appearance="fill">
+        <mat-form-field class="item-code" appearance="outline">
             <mat-label>{{t('Supply Item')}}</mat-label>
             <input type="text" matInput [formControl]="sidControl" [matAutocomplete]="auto1">
+            <mat-icon matPrefix>outbox</mat-icon>
             <mat-autocomplete #auto1="matAutocomplete" [displayWith]="displayFn"
-                (optionSelected)="sidSelected($event)">
-                <mat-option *ngFor="let option of sidFilteredOptions | async" [value]="option">
-                  {{t(option)}}
-                </mat-option>
-              </mat-autocomplete>
+              (optionSelected)="sidSelected($event)">
+              <mat-option *ngFor="let option of sidFilteredOptions | async" [value]="option">
+                {{t(option)}}
+              </mat-option>
+            </mat-autocomplete>
         </mat-form-field>
-        <mat-form-field class="item-code" appearance="fill">
+        <mat-form-field class="item-code" appearance="outline">
             <mat-label>{{t('Demand Item')}}</mat-label>
+            <mat-icon matPrefix>move_to_inbox</mat-icon>
             <input type="text" matInput [formControl]="didControl" [matAutocomplete]="auto2">
             <mat-autocomplete #auto2="matAutocomplete" [displayWith]="displayFn"
-                (optionSelected)="didSelected($event)">
-                <mat-option *ngFor="let option of didFilteredOptions | async" [value]="option">
-                  {{t(option)}}
-                </mat-option>
-              </mat-autocomplete>
+              (optionSelected)="didSelected($event)">
+              <mat-option *ngFor="let option of didFilteredOptions | async" [value]="option">
+                {{t(option)}}
+              </mat-option>
+            </mat-autocomplete>
         </mat-form-field>
     </form>
 </div>

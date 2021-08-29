@@ -1,3 +1,4 @@
+import { MediaMatcher } from '@angular/cdk/layout';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Subject } from 'rxjs/internal/Subject';
@@ -22,12 +23,17 @@ export class OffersComponent implements OnInit, OnDestroy {
   unreadOfferChats: Array<string> = [];
   chatOfferId: string = '';
 
+  mobileQuery: MediaQueryList;
+
   private ngUnsubscribe = new Subject();
 
   constructor(
     public dialog: MatDialog,
     private api: EdmpwsapiService,
-    private offers: OfferService) {
+    private offers: OfferService,
+    private media: MediaMatcher) {
+
+    this.mobileQuery = media.matchMedia('(max-width: 600px)');
 
     this.offers.offers$
       .pipe(takeUntil(this.ngUnsubscribe))

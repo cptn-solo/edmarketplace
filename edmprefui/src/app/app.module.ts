@@ -31,6 +31,7 @@ import { ChatdialogComponent } from './components/chatdialog/chatdialog.componen
 import { HttpClientModule } from '@angular/common/http';
 import { TranslocoRootModule } from './transloco/transloco-root.module';
 import { LocalesComponent } from './components/locales/locales.component';
+import { TradeitemComponent } from './components/tradeitem/tradeitem.component';
 
 @NgModule({
   declarations: [
@@ -42,7 +43,8 @@ import { LocalesComponent } from './components/locales/locales.component';
     TradeitemeditComponent,
     MytradeitemseditComponent,
     ChatdialogComponent,
-    LocalesComponent
+    LocalesComponent,
+    TradeitemComponent
   ],
   imports: [
     BrowserModule,

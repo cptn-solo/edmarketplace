@@ -1,4 +1,4 @@
-<h2 mat-dialog-title *ngIf="this.offer.offerId.length > 0">{{ 'Chat with' | transloco: { nickname: offer.info.nickname, location: offer.info.location } }}</h2>
+<h2 mat-dialog-title *ngIf="this.offer.offerId.length > 0">{{ 'Chat with' | transloco }}:&nbsp;{{ offer.info.nickname}}</h2>
 <h2 mat-dialog-title *ngIf="this.offer.offerId.length === 0">{{'Offer dropped'  | transloco}}</h2>
 <mat-dialog-content class="mat-typography" #chatView>
   <div *ngFor="let message of messages" class="{{ message.inbound ? 'chat-in' : 'chat-out'}}">
@@ -6,7 +6,7 @@
   </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-    <mat-form-field appearance="fill" class="contact-info" style="width: 100%ß">
+    <mat-form-field appearance="outline" class="contact-info" style="width: 100%ß">
         <mat-label>{{'Message text' | transloco}}</mat-label>
         <textarea matInput #contactInfo
             (keyup.enter)="sendMessage()"
