@@ -21,7 +21,8 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDialogModule, MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatMenuModule } from '@angular/material/menu';
-import { FormsModule } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { OffersComponent } from './components/offers/offers.component';
 import { MyinfoeditComponent } from './components/myinfoedit/myinfoedit.component';
 import { TradeitemeditComponent } from './components/tradeitemedit/tradeitemedit.component';
@@ -61,7 +62,9 @@ import { LocalesComponent } from './components/locales/locales.component';
     MatDialogModule,
     MatBadgeModule,
     MatMenuModule,
+    MatAutocompleteModule,
     FormsModule,
+    ReactiveFormsModule,
     HttpClientModule,
     TranslocoRootModule,
   ],
