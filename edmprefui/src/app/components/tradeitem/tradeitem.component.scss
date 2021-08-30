@@ -1,0 +1,26 @@
+.trade-item {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    .trade-item-name {
+        display: flex;
+        align-items: center;
+        overflow-wrap: anywhere;
+        flex-grow: 1;
+        .mat-icon {
+            margin-right: 8px;
+        }
+    }
+    .trade-item-quantity {
+        height: 24px;
+        min-width: 40px;
+        border: 1px;
+        border-radius: 5px;
+        margin: 4px 8px;
+        border-color: rgba($color: #000000, $alpha: .1);
+        background-color: rgba($color: #000000, $alpha: .1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}

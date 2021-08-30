@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy } from '@angular/core';
 import { Subject } from 'rxjs/internal/Subject';
 import { takeUntil } from 'rxjs/operators';
 import { StateService } from 'src/app/services/state.service';
@@ -10,7 +10,6 @@ import { StateService } from 'src/app/services/state.service';
 export class TradeComponent implements OnDestroy {
 
   panels: Array<string> = []; // expanded panels
-  showAddItem = false;
 
   private ngUnsubscribe = new Subject();
 

@@ -13,7 +13,7 @@ import { OfferService } from 'src/app/services/offer.service';
 export class MytradeitemseditComponent implements OnInit {
 
   private ngUnsubscribe = new Subject();
-
+  showAddItem = false;
   items: Array<TradeItem> = [];
   userinfo: UserInfo = DEFAULT_USER_INFO;
 
@@ -72,7 +72,7 @@ export class MytradeitemseditComponent implements OnInit {
   }
 
   ngOnInit(): void {
-
+    this.showAddItem = this.items.length === 0;
   }
 
 }

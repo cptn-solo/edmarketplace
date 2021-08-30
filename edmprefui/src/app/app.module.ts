@@ -31,6 +31,10 @@ import { ChatdialogComponent } from './components/chatdialog/chatdialog.componen
 import { HttpClientModule } from '@angular/common/http';
 import { TranslocoRootModule } from './transloco/transloco-root.module';
 import { LocalesComponent } from './components/locales/locales.component';
+import { TradeitemComponent } from './components/tradeitem/tradeitem.component';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
+import { MyidComponent } from './components/myid/myid.component';
 
 @NgModule({
   declarations: [
@@ -42,7 +46,9 @@ import { LocalesComponent } from './components/locales/locales.component';
     TradeitemeditComponent,
     MytradeitemseditComponent,
     ChatdialogComponent,
-    LocalesComponent
+    LocalesComponent,
+    TradeitemComponent,
+    MyidComponent
   ],
   imports: [
     BrowserModule,
@@ -67,6 +73,12 @@ import { LocalesComponent } from './components/locales/locales.component';
     ReactiveFormsModule,
     HttpClientModule,
     TranslocoRootModule,
+    ServiceWorkerModule.register('ngsw-worker.js', {
+      enabled: environment.production,
+      // Register the ServiceWorker as soon as the app is stable
+      // or after 30 seconds (whichever comes first).
+      registrationStrategy: 'registerWhenStable:30000'
+    }),
   ],
   providers: [
     { provide: MAT_DIALOG_DEFAULT_OPTIONS,

@@ -151,7 +151,6 @@ export class StateService {
   }
 
   processUserOffer(offers: Array<Offer>) {
-    // returns true if nothing to publish (server data overrites user's data)
     var userInfo = this._userInfo$.value;
     if (userInfo.items.length === 0 && offers.length !== 0) {
       var defaultOffer = offers[0] as unknown as Offer;
@@ -161,6 +160,7 @@ export class StateService {
       userInfo.created = defaultOffer.created;
       userInfo.expired = defaultOffer.expired;
       userInfo.offerId = defaultOffer.offerId;
+      this.updateUserTradeItems(defaultOffer.items);
       this.updateUserInfo(userInfo);
     }
   }

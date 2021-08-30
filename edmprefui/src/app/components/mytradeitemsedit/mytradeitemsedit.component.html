@@ -1,53 +1,18 @@
 <ng-container *transloco="let t">
 <div>
-    <div class="offers-header">
-        <div class="left-header"><span>{{t('Supply')}}</span></div>
-        <div class="settings">&nbsp;</div>
-        <div class="right-header"><span>{{t('Demand')}}</span></div>
-        <div class="settings">&nbsp;</div>
-    </div>
-    <div class="offer">
-        <div class="offer-header">
-            <div class="left-offer-info">{{userinfo.nickname}} : {{userinfo.location}}</div>
-            <div class="right-offer-info">
-            </div>
-        </div>
-        <div *ngFor="let item of items" class="offer-items">
-            <div class="supply-items">
-                <mat-chip-list>
-                    <mat-chip color="primary">{{t(item.sid)}}&nbsp;
-                        <button mat-icon-button aria-label="Remove one"
-                            (click)="change('supply', -1, item)">
-                            <mat-icon>remove</mat-icon>
-                        </button>
-                        <b>{{item.supply}}</b>
-                        <button mat-icon-button aria-label="Add one"
-                            (click)="change('supply', +1, item)">
-                            <mat-icon>add</mat-icon>
-                        </button>
-                    </mat-chip>
-                </mat-chip-list>
-            </div>
-            <div class="settings">
-                <button mat-icon-button color="warn"
-                    title="{{t('Switch trade item sides (don\'t forget to Update Offer)')}}"
-                    (click)="switchsides(item)">
-                    <mat-icon>multiple_stop</mat-icon>
-                </button>
-            </div>
-            <div class="demand-items">
-                <mat-chip-list>
-                    <mat-chip color="primary">
-                        <button mat-icon-button aria-label="Remove one" (click)="change('demand', -1, item)">
-                            <mat-icon>remove</mat-icon>
-                        </button>
-                        <b>{{item.demand}}</b>
-                        <button mat-icon-button aria-label="Add one" (click)="change('demand', +1, item)">
-                            <mat-icon>add</mat-icon>
-                        </button>
-                        &nbsp;{{t(item.did)}}
-                    </mat-chip>
-                </mat-chip-list>
+    <div class="offer" [ngStyle]="items.length > 0 ? null : {display: 'none'}">
+        <div *ngFor="let item of items" class="offer-item">
+            <div class="trade-items">
+                <app-tradeitem [itemid]="item.sid" [quantity]="item.supply" [demand]="false"
+                    [readonly]="false"
+                    class="trade-item-suply"
+                    (onChange)="change('supply',$event, item)">
+                </app-tradeitem>
+                <app-tradeitem [itemid]="item.did" [quantity]="item.demand"
+                    [readonly]="false"
+                    class="trade-item-demand"
+                    (onChange)="change('demand',$event, item)">
+                </app-tradeitem>
             </div>
             <div class="settings">
                 <button mat-icon-button color="warn"
@@ -57,6 +22,17 @@
                 </button>
             </div>
         </div>
+    </div>
+    <div class="new-trade-item-panel" [ngStyle]="showAddItem ? null : {display: 'none'}">
+        <app-tradeitemedit #tradeitemedit></app-tradeitemedit>
+        <button mat-button color="accent"
+            (click)="tradeitemedit.add();showAddItem = false">{{t('Add to Offer')}}</button>&nbsp;
+        <button mat-button
+            (click)="showAddItem = false">{{t('Cancel')}}</button>&nbsp;
+    </div>
+    <div>
+        <button mat-button color="accent" *ngIf="!showAddItem"
+            (click)="showAddItem = true">{{t('Add Item')}}</button>&nbsp;
     </div>
 </div>
 </ng-container>

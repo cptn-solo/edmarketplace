@@ -50,6 +50,8 @@ export class TradeitemeditComponent implements OnInit, OnDestroy {
 
   add() {
     this.offers.addItem(this.addeditem);
+    this.sidControl.setValue('');
+    this.didControl.setValue('');
   }
 
   sidSelected(event: MatAutocompleteSelectedEvent) {

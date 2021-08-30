@@ -1,84 +1,61 @@
-.offers-header {
+.offers-tools {
     display: flex;
-    margin: 8px;
-    padding: 8px;
-    .left-header, .right-header {
-        font-weight: bolder;
-        span {
-            text-align: center;
-        }
-        display: flex;
-        flex-wrap: wrap;
-        flex: 1;
-    }
-    .left-header {
-        flex-direction: row-reverse;
-    }
-    .right-header {
-        flex-direction: row;
-    }
+    justify-items: stretch;
+    align-items: center;
 }
 .offer {
-    border-radius: 5px;
-    border-style: solid;
-    border-color: gray;
-    border-width: 1px;
-    margin: 8px;
+    margin: 0 -24px;
+    padding: 8px 24px;
+    &.alt-rows:nth-child(even) {
+        background-color: rgba($color: #000000, $alpha: .1);
+    }
     .offer-header {
         display: flex;
-        flex-flow: row;
-        .left-offer-info, .right-offer-info {
-            flex: 1;
-            line-height: 14px;
-            height: 14px;
-            margin: 8px 0px;
-            padding: 8px 8px;
+        align-items: center;
+        // offerer info + offer actions
+        .left-offer-info {
             display: flex;
             align-items: center;
-        }
-        .left-offer-info {
-            width: 200px;
-            font-weight: bolder;
+            overflow-wrap: anywhere;
         }
         .right-offer-info {
-            width: 150px;
-            text-align: right;
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
             justify-content: flex-end;
+            >mat-icon {
+                margin: 0 8px;
+            }
         }
     }
-    .offer-items {
+    .offer-item {
+        border: 1px solid;
+        border-radius: 5px;
+        padding-left: 8px;
+        margin: 8px 0;
+
         display: flex;
-        .supply-items, .demand-items, .settings {
+        .trade-items {
             display: flex;
-            flex-wrap: wrap;
-            padding: 8px;
+            flex-grow: 1;
             @media screen and (max-width: 600px) {
                 flex-direction: column;
             }
-            flex: 1;
-            .mat-chip {
-                margin: 8px;
-                b {
-                    font-size: 18px;
+            app-tradeitem {
+                display: flex;
+                align-items: center;
+                @media screen and (min-width: 601px) {
+                    flex: 1;
+                    &.trade-item-suply {
+                        margin-right: 24px;
+                    }
                 }
             }
         }
-        .supply-items {
-            flex-direction: row-reverse;
-            //margin-right: 20px;
-        }
-        .demand-items {
-            flex-direction: row;
-        }
-        .supply-items, .demand-items {
-            flex-grow: 1;
+        .settings {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
         }
     }
-}
-.offers-header >.settings, .offer >.offer-items >.settings {
-    flex-grow: 0;
-    width: 56px;
-    min-width: 56px;
-    justify-content: center;
-    padding: 8px;
 }

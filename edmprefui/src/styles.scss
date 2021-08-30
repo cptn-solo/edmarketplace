@@ -3,13 +3,16 @@
 .mat-expansion-panel-header-title {
     font-size: 18px;
 }
+mat-action-row.mat-action-row {
+    padding: 16px 24px 16px 24px;
+}
 .mat-form-field {
     margin-right: 8px;
 }
 
 /* utilities */
 .basic-container {
-    padding: 30px;
+    padding: 24px;
 }
 .toolbar-spacer {
     flex: 1 1 auto;
@@ -25,4 +28,21 @@
     @media screen and (max-width: 600px) {
         height: 56px !important;
     }
+}
+@import "~@angular/material/theming";
+
+$primaryPalette: mat-palette($mat-indigo);
+$accentPalette:  mat-palette($mat-pink, A200, A100, A400);
+$warnPalette:    mat-palette($mat-red);
+
+.primary-color {
+    color: mat-color($primaryPalette);
+}
+
+.accent-color {
+    color: mat-color($accentPalette);
+}
+
+.warn-color {
+    color: mat-color($warnPalette);
 }

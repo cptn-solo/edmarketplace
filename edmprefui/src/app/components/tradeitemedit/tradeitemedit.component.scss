@@ -1,18 +1,11 @@
 div.added-item {
-    .item-name {
-        min-width: 350px;
+    .item-code {
+        min-width: 272px;
     }
     .item-code {
-        min-width: 250px;
-    }
-    .item-name, .item-code {
         @media screen and (max-width: 600px) {
             width: 100%;
             display: block;
         }
-    }
-
-    .item-stock {
-        width: 170px;
     }
 }

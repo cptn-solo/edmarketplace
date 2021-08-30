@@ -1,28 +1,19 @@
 <ng-container *transloco="let t">
 <div class="offer-info">
 
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
         <mat-label>{{t('Nickname')}}</mat-label>
         <input matInput
             maxLength="100"
             [(ngModel)]="userinfo.nickname">
     </mat-form-field>
 
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
         <mat-label>{{t('Offer location (system)')}}</mat-label>
         <input matInput
             maxLength="100"
             [(ngModel)]="userinfo.location">
     </mat-form-field>
 
-    <mat-form-field appearance="fill" class="contact-info">
-        <mat-label>{{t('Contact details (discord)')}}</mat-label>
-        <textarea matInput #contactInfo
-            placeholder="{{t('Unknown for the server')}}"
-            maxLength="200"
-            [(ngModel)]="userinfo.contactinfo">
-        </textarea>
-        <mat-hint align="end">{{contactInfo.value.length}} / {{contactInfo.maxLength}}</mat-hint>
-    </mat-form-field>
 </div>
 </ng-container>

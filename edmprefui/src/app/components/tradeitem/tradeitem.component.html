@@ -1,0 +1,22 @@
+<ng-container *transloco="let t">
+<div class="trade-item">
+    <div class="trade-item-name">
+        <mat-icon *ngIf="!demand" [color]="color">outbox</mat-icon>
+        <mat-icon *ngIf="demand" [color]="color">move_to_inbox</mat-icon>
+        {{t(itemid)}}
+    </div>
+    <div class="trade-item-quantity">
+        <button mat-icon-button aria-label="Remove one"
+            *ngIf="!readonly"
+            (click)="onChange.next(-1)">
+            <mat-icon>remove</mat-icon>
+        </button>
+        <b>{{quantity}}</b>
+        <button mat-icon-button aria-label="Add one"
+            *ngIf="!readonly"
+            (click)="onChange.next(+1)">
+            <mat-icon>add</mat-icon>
+        </button>
+    </div>
+</div>
+</ng-container>
