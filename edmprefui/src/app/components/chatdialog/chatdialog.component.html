@@ -1,4 +1,7 @@
-<h2 mat-dialog-title *ngIf="this.offer.offerId.length > 0">{{ 'Chat with' | transloco }}:&nbsp;{{ offer.info.nickname}}</h2>
+<h2 mat-dialog-title *ngIf="this.offer.offerId.length > 0">{{ 'Chat with' | transloco }}:&nbsp;{{ offer.info.nickname}}
+  <button mat-icon-button title="{{'Copy nickname to clipboard' | transloco}}" cdkCopyToClipboard="{{offer.info.nickname}}">
+    <mat-icon>content_copy</mat-icon></button>
+</h2>
 <h2 mat-dialog-title *ngIf="this.offer.offerId.length === 0">{{'Offer dropped'  | transloco}}</h2>
 <mat-dialog-content class="mat-typography" #chatView>
   <div *ngFor="let message of messages" class="{{ message.inbound ? 'chat-in' : 'chat-out'}}">

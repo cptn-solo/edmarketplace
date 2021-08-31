@@ -2,6 +2,7 @@
     display: flex;
     justify-items: stretch;
     align-items: center;
+    padding: 8px 0;
 }
 .offer {
     margin: 0 -24px;
@@ -10,13 +11,20 @@
         background-color: rgba($color: #000000, $alpha: .1);
     }
     .offer-header {
+        .mat-button {
+            padding: 0 8px;
+            min-width: 0;
+        }
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         // offerer info + offer actions
         .left-offer-info {
             display: flex;
             align-items: center;
             overflow-wrap: anywhere;
+            justify-content: space-between;
+
         }
         .right-offer-info {
             display: flex;

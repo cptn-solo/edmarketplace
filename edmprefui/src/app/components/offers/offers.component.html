@@ -17,7 +17,12 @@
     <div class="offer alt-rows" *ngFor="let offer of filteredOffers">
         <input #bidstage type="hidden" [value]="getBidStage(offer)"/>
         <div class="offer-header">
-            <div class="left-offer-info">{{offer.info.nickname}} : {{offer.info.location}}</div>
+            <div class="left-offer-info">
+                <button mat-button
+                    title="{{t('Copy nickname to clipboard')}}" cdkCopyToClipboard="{{offer.info.nickname}}">{{offer.info.nickname}}</button>|
+                <button mat-button
+                    title="{{t('Copy location to clipboard')}}" cdkCopyToClipboard="{{offer.info.location}}">{{offer.info.location}}</button>
+            </div>
             <div class="right-offer-info" *ngIf="!!userInfo.offerId">
                 <button mat-button title="{{t('Recall Bid from Offer')}}"
                     *ngIf="bidstage.value === 'wait' || bidstage.value === 'message'" color="warn"
