@@ -1,37 +1,50 @@
 <ng-container *transloco="let t">
 <div>
     <div class="offer" [ngStyle]="items.length > 0 ? null : {display: 'none'}">
-        <div *ngFor="let item of items" class="offer-item">
-            <div class="trade-items">
-                <app-tradeitem [itemid]="item.sid" [quantity]="item.supply" [demand]="false"
-                    [readonly]="false"
-                    class="trade-item-suply"
-                    (onChange)="change('supply',$event, item)">
-                </app-tradeitem>
-                <app-tradeitem [itemid]="item.did" [quantity]="item.demand"
-                    [readonly]="false"
-                    class="trade-item-demand"
-                    (onChange)="change('demand',$event, item)">
-                </app-tradeitem>
-            </div>
-            <div class="settings">
-                <button mat-icon-button color="warn"
-                    title="{{t('Remove item from your offer (don\'t forget to Update Offer)')}}"
-                    (click)="delete(item)">
-                    <mat-icon>clear</mat-icon>
-                </button>
-            </div>
-        </div>
+        <ng-container *ngFor="let item of items">
+            <ng-container *ngIf="editTradeId !== null && item.tradeid === editTradeId; then editItem; else viewItem">
+            </ng-container>
+            <ng-template #viewItem>
+                <div class="offer-item">
+                    <div class="trade-items">
+                        <app-tradeitem [itemid]="item.sid" [quantity]="item.supply" [demand]="false"
+                            [readonly]="false"
+                            class="trade-item-suply"
+                            (onChange)="change('supply',$event, item)">
+                        </app-tradeitem>
+                        <app-tradeitem [itemid]="item.did" [quantity]="item.demand"
+                            [readonly]="false"
+                            class="trade-item-demand"
+                            (onChange)="change('demand',$event, item)">
+                        </app-tradeitem>
+                    </div>
+                    <div class="settings">
+                        <button mat-icon-button aria-label="Change item"
+                            title="{{t('Change selected items (don\'t forget to Update Offer)')}}"
+                            (click)="editTradeId = item.tradeid;">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn"
+                            title="{{t('Remove item from your offer (don\'t forget to Update Offer)')}}"
+                            (click)="delete(item)">
+                            <mat-icon>clear</mat-icon>
+                        </button>
+                    </div>
+                </div>
+            </ng-template>
+            <ng-template #editItem>
+                <div class="edit-trade-item-panel">
+                    <app-tradeitemedit #tradeitemedit [editItem]="item"
+                        (onClose)="editTradeId = null;"></app-tradeitemedit>
+                </div>
+            </ng-template>
+        </ng-container>
     </div>
-    <div class="new-trade-item-panel" [ngStyle]="showAddItem ? null : {display: 'none'}">
-        <app-tradeitemedit #tradeitemedit></app-tradeitemedit>
-        <button mat-button color="accent"
-            (click)="tradeitemedit.add();showAddItem = false">{{t('Add to Offer')}}</button>&nbsp;
-        <button mat-button
-            (click)="showAddItem = false">{{t('Cancel')}}</button>&nbsp;
+    <div class="new-trade-item-panel" *ngIf="showAddItem">
+        <app-tradeitemedit #tradeitemedit (onClose)="showAddItem = false;"></app-tradeitemedit>
     </div>
     <div>
-        <button mat-button color="accent" *ngIf="!showAddItem"
+        <button mat-button color="accent" *ngIf="!showAddItem && editTradeId === null"
             (click)="showAddItem = true">{{t('Add Item')}}</button>&nbsp;
     </div>
 </div>

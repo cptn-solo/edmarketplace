@@ -13,7 +13,8 @@ export class TradeitemComponent implements OnInit {
   @Input() color?: string;
   @Input() readonly: boolean = true;
 
-  @Output() onChange = new EventEmitter<number>()
+  @Output() onChange = new EventEmitter<number>();
+  @Output() onEditClick = new EventEmitter();
 
   constructor() { }
 
