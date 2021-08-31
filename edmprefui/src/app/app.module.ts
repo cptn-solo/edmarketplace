@@ -35,6 +35,7 @@ import { TradeitemComponent } from './components/tradeitem/tradeitem.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
 import { MyidComponent } from './components/myid/myid.component';
+import { ClipboardModule } from '@angular/cdk/clipboard'
 
 @NgModule({
   declarations: [
@@ -73,6 +74,7 @@ import { MyidComponent } from './components/myid/myid.component';
     ReactiveFormsModule,
     HttpClientModule,
     TranslocoRootModule,
+    ClipboardModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: environment.production,
       // Register the ServiceWorker as soon as the app is stable

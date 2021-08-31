@@ -125,6 +125,9 @@ export class OffersComponent implements OnInit, OnDestroy {
     this.offers.getoffers();
   }
 
+  copyToCB(text: string) {
+
+  }
   /* lifesycle */
   ngOnInit(): void {
   }

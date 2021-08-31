@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { Subject } from 'rxjs/internal/Subject';
 import { takeUntil } from 'rxjs/operators';
 import { EdmpwsapiService } from 'src/app/services/edmpwsapi.service';
@@ -16,7 +17,8 @@ export class MyidComponent implements OnInit {
 
   constructor(
     private state: StateService,
-    private api: EdmpwsapiService) {
+    private api: EdmpwsapiService,
+    private router: Router) {
     this.state.traceToken$
       .pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(val => this.token = val);
@@ -27,7 +29,10 @@ export class MyidComponent implements OnInit {
       this.state.registerUserTraceToken(this.token);
       this.state.updateUserTradeItems([]);
       this.api.close();
-      setTimeout(() => this.api.connect(), 50);
+      setTimeout(() => {
+        this.api.connect();
+        this.router.navigate(['/trade'])
+      }, 50);
     }
   }
 

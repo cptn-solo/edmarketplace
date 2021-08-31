@@ -9,6 +9,13 @@
                     maxLength="100"
                     [(ngModel)]="token">
                 <mat-hint class="warn-color">{{t("Don't share your ID with other playes!")}}</mat-hint>
+                <button mat-icon-button matPrefix
+                    title="{{t('Copy to clipboard')}}" cdkCopyToClipboard="{{token}}">
+                    <mat-icon>content_copy</mat-icon></button>
+                <button mat-icon-button matSuffix
+                    title="{{t('Clear')}}"
+                    (click)="token = ''">
+                    <mat-icon>backspace</mat-icon></button>
             </mat-form-field>
             <h3>{{t('Please connect with this ID from one device at a time to avoid data conflicts.')}}</h3>
         </div>
