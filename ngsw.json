@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1630279415189,
+  "timestamp": 1630444413438,
   "index": "/edmarketplace/index.html",
   "assetGroups": [
     {
@@ -13,7 +13,7 @@
       "urls": [
         "/edmarketplace/favicon.ico",
         "/edmarketplace/index.html",
-        "/edmarketplace/main.6f55d5b829467e896d2a.js",
+        "/edmarketplace/main.7a773a34a8c03770f5b0.js",
         "/edmarketplace/manifest.webmanifest",
         "/edmarketplace/polyfills.81e561f5da53a653ce8d.js",
         "/edmarketplace/runtime.d3cf44c40a7d8b29e6df.js",
@@ -54,7 +54,7 @@
     "/edmarketplace/assets/i18n/es.json": "079168685795bd381daa5c1c26c1c1910664d3c6",
     "/edmarketplace/assets/i18n/fr.json": "f1c8d69be34d6cf3a761efd9772bd3b8f9041300",
     "/edmarketplace/assets/i18n/pt.json": "bfd815748769357ca95a7ffa9cfcd3e714126e4d",
-    "/edmarketplace/assets/i18n/ru.json": "f2907fa7ace4e843adf7c62d6dfe30e5d2bdd87e",
+    "/edmarketplace/assets/i18n/ru.json": "3db074ada6c5bd9181b52cb48f47b9b594fcc05d",
     "/edmarketplace/assets/icons/icon-128x128.png": "dae3b6ed49bdaf4327b92531d4b5b4a5d30c7532",
     "/edmarketplace/assets/icons/icon-144x144.png": "b0bd89982e08f9bd2b642928f5391915b74799a7",
     "/edmarketplace/assets/icons/icon-152x152.png": "7479a9477815dfd9668d60f8b3b2fba709b91310",
@@ -64,8 +64,8 @@
     "/edmarketplace/assets/icons/icon-72x72.png": "c457e56089a36952cd67156f9996bc4ce54a5ed9",
     "/edmarketplace/assets/icons/icon-96x96.png": "3914125a4b445bf111c5627875fc190f560daa41",
     "/edmarketplace/favicon.ico": "22f6a4a3bcaafafb0254e0f2fa4ceb89e505e8b2",
-    "/edmarketplace/index.html": "fd87fa83b8a3699dea9d4da7b9875dcf558ec555",
-    "/edmarketplace/main.6f55d5b829467e896d2a.js": "8e6dd618b0bad66c3daf3b3e0f6e8dbe514f82ba",
+    "/edmarketplace/index.html": "fe6effcc9a33ac928a81adfe729800e573de195d",
+    "/edmarketplace/main.7a773a34a8c03770f5b0.js": "606f9ee48bbb4c0754e52549507f504cdd22c816",
     "/edmarketplace/manifest.webmanifest": "ae4807a19a4e7d026aa5708d7cc4defca63b27f3",
     "/edmarketplace/polyfills.81e561f5da53a653ce8d.js": "fa7bd3d723f5a004ca7c0e2c37b505a213f9a4a8",
     "/edmarketplace/runtime.d3cf44c40a7d8b29e6df.js": "6457ca4e977a3bd7b915671a9be93061b531afff",
