@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { TranslocoService } from '@ngneat/transloco';
@@ -27,7 +27,7 @@ export class TradeitemeditComponent implements OnInit, OnDestroy {
   sidFilteredOptions?: Observable<string[]>;
   didFilteredOptions?: Observable<string[]>;
 
-  addeditem: TradeItem = {
+  item: TradeItem = {
     tradeid: -1,
     sid: "",
     sname: "",
@@ -39,6 +39,9 @@ export class TradeitemeditComponent implements OnInit, OnDestroy {
     demand: 1
   };
 
+  @Input() editItem?: TradeItem;
+  @Output() onClose = new EventEmitter();
+
   constructor(
     private offers: OfferService,
     private loco: TranslocoService
@@ -49,17 +52,25 @@ export class TradeitemeditComponent implements OnInit, OnDestroy {
   }
 
   add() {
-    this.offers.addItem(this.addeditem);
+    this.offers.addItem(this.item);
     this.sidControl.setValue('');
     this.didControl.setValue('');
+    this.onClose.next();
+  }
+
+  save() {
+    this.offers.updateItem(this.item);
+    this.sidControl.setValue('');
+    this.didControl.setValue('');
+    this.onClose.next();
   }
 
   sidSelected(event: MatAutocompleteSelectedEvent) {
-    this.addeditem.sid = event.option.value as unknown as string;
+    this.item.sid = event.option.value as unknown as string;
   }
 
   didSelected(event: MatAutocompleteSelectedEvent) {
-    this.addeditem.did = event.option.value as unknown as string;
+    this.item.did = event.option.value as unknown as string;
   }
 
   displayFn = (matId: string) => {
@@ -80,6 +91,11 @@ export class TradeitemeditComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    if (this.editItem) {
+      this.item = Object.assign(this.item, this.editItem);
+      this.sidControl.setValue(this.item.sid);
+      this.didControl.setValue(this.item.did);
+    }
     this.sidFilteredOptions = this.sidControl.valueChanges
       .pipe(
         takeUntil(this.ngUnsubscribe),
@@ -92,6 +108,6 @@ export class TradeitemeditComponent implements OnInit, OnDestroy {
         startWith(''),
         map(name => name ? this._filter(name) : this.options.slice())
       );
-}
+  }
 
 }

@@ -17,6 +17,8 @@ export class MytradeitemseditComponent implements OnInit {
   items: Array<TradeItem> = [];
   userinfo: UserInfo = DEFAULT_USER_INFO;
 
+  editTradeId?: number | null = null;
+
   constructor(private offers: OfferService) {
     this.offers.items$
       .pipe(takeUntil(this.ngUnsubscribe))

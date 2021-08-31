@@ -1,5 +1,5 @@
 <ng-container *transloco="let t">
-<div class="added-item">
+<div class="edit-item">
     <form>
         <mat-form-field class="item-code" appearance="outline">
             <mat-label>{{t('Supply Item')}}</mat-label>
@@ -25,4 +25,13 @@
         </mat-form-field>
     </form>
 </div>
+<button mat-button color="accent"
+  *ngIf="item.tradeid === -1"
+  (click)="add()">{{t('Add to Offer')}}</button>&nbsp;
+<button mat-button color="accent"
+  *ngIf="item.tradeid !== -1"
+  (click)="save()">{{t('Save')}}</button>&nbsp;
+<button mat-button
+  (click)="onClose.next()">{{t('Cancel')}}</button>&nbsp;
+
 </ng-container>
