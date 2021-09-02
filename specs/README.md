@@ -281,8 +281,8 @@ Calls and messages:
     "payload":{
       "token":"47afd5c8-da8c-48a9-a28f-392eacb1bf81", // token will be used to authorise this call
       "message":{
-        "myOfferId:"02a69a39-15bc-47e7-ad3a-e9dcd7e153a1", // offer to show the message on on the recepient's side
-        "offerId":"63271c30-d8cb-43b1-9530-4a51e738ce5b", // target offer
+        "myOfferId:"02a69a39-15bc-47e7-ad3a-e9dcd7e153a1", // offer to show the message on on the recepient's side (sender's offer)
+        "offerId":"63271c30-d8cb-43b1-9530-4a51e738ce5b", // target offer (receiver's offer)
         "text":"hey",
         "inbound":true,
         "date":1630595348931
@@ -296,8 +296,9 @@ Calls and messages:
 
 {
   "code":"message",
-  "message":{
-    "offerId":"63271c30-d8cb-43b1-9530-4a51e738ce5b", // offer to show the message on on my side (target offer)
+  "message":{ //NB: `offerId` changed to `myOfferId` and vice versa by the API to position a message correctly on recepient's side
+    "myOfferId":"63271c30-d8cb-43b1-9530-4a51e738ce5b", // offer to show the message on on the recepient's side (receiver's offer)
+    "offerId":"02a69a39-15bc-47e7-ad3a-e9dcd7e153a1", // offer to show the message on on my side (sender's offer)
     "text":"Th",
     "inbound":true, // not actually important as all messages received from the backend can be considered inbound
     "date":1630595362369 // date set by the other partie upon message sent (not a server date, but a client one)
