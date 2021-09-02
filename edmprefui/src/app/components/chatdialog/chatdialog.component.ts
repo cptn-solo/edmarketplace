@@ -23,11 +23,12 @@ export class ChatdialogComponent implements OnInit, OnDestroy, AfterViewChecked 
   connected: boolean = false;
   messages: Array<ChatMessage> = [];
   offer = defaultOffer;
+  myOfferId: string = '';
 
   private ngUnsubscribe = new Subject();
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { offer: Offer},
+    @Inject(MAT_DIALOG_DATA) public data: { offer: Offer, myOfferId: string },
     private api: EdmpwsapiService,
     private offers: OfferService,
     private state: StateService) {
@@ -86,6 +87,7 @@ export class ChatdialogComponent implements OnInit, OnDestroy, AfterViewChecked 
   sendMessage() {
     if (!this.connected || !this.canSend) return;
     var message = {
+      myOfferId: this.myOfferId,
       offerId: this.offer.offerId,
       text: this.message.substring(0, 200),
       inbound: true,
@@ -106,6 +108,7 @@ export class ChatdialogComponent implements OnInit, OnDestroy, AfterViewChecked 
   /* lifesycle */
   ngOnInit(): void {
     this.offer = this.data.offer;
+    this.myOfferId = this.data.myOfferId;
     this.messages = this.state.getMessagesByOfferId(this.offer.offerId);
     this.connected = this.api.connected$.value;
     this.canSend = this.offer.connectionId.length > 0;
