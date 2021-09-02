@@ -23,11 +23,11 @@ exports.comms = async event => {
         switch (eventBody.data.method) {
             case shared.COMMS_METHOD_BIDPUSH:
                 await addOrRemoveBid(apigwManagementApi, connectionid,
-                    eventBody.data.payload.token, eventBody.data.payload.offerId, true);
+                    eventBody.data.payload.token, eventBody.data.payload.offerId, eventBody.data.payload.myOfferId, true);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_BIDPULL:
                 await addOrRemoveBid(apigwManagementApi, connectionid,
-                    eventBody.data.payload.token, eventBody.data.payload.offerId, false);
+                    eventBody.data.payload.token, eventBody.data.payload.offerId, eventBody.data.payload.myOfferId, false);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_MESSAGE:
                 await forwardMessage(apigwManagementApi, connectionid,
@@ -60,9 +60,9 @@ async function forwardMessage (apigwManagementApi, connectionId, token, message)
         if (!offer.bids || offer.bids === undefined || offer.bids.length === 0)
             throw new Error('no bids on their offer yet');
 
-        // default offer untill multioffer implementation. for now only multiitem
-        // implemented (one offer per user, any supply:demand pairs per offer)
-        const myOfferId = trace.offers[0];
+        const myOfferId = message.myOfferId;
+        console.log('message: my offer id: '+myOfferId);
+        console.log('message: offer bids: '+JSON.stringify(offer.bids));
         const idx1 = offer.bids.findIndex(b => b === myOfferId);
         if (idx1 < 0)
             throw new Error('no my bid for this offer');
@@ -78,7 +78,9 @@ async function forwardMessage (apigwManagementApi, connectionId, token, message)
 
         /* both bids present, can forward chat message: */
 
+        message.myOfferId = message.offerId; // message will drop on my offer for him
         message.offerId = myOfferId; // message will drop on my offer for him
+
         const code = shared.COMMS_METHOD_MESSAGE;
         const payload = { code, message };
         await shared.postToConnection(apigwManagementApi, offer.connectionId, payload);
@@ -93,7 +95,7 @@ async function forwardMessage (apigwManagementApi, connectionId, token, message)
     return true;
 }
 
-async function addOrRemoveBid (apigwManagementApi, connectionId, token, offerId, addMode) {
+async function addOrRemoveBid (apigwManagementApi, connectionId, token, offerId, myOfferId, addMode) {
     const trace = await shared.getTrace(token);
 
     try {
@@ -105,9 +107,6 @@ async function addOrRemoveBid (apigwManagementApi, connectionId, token, offerId,
         if (!offer)
             throw new Error('no their offer');
 
-        // default offer untill multioffer implementation. for now only multiitem
-        // implemented (one offer per user, any supply:demand pairs per offer)
-        const myOfferId = trace.offers[0];
         if (!offer.bids || offer.bids === undefined) {
             offer.bids = [];
         }

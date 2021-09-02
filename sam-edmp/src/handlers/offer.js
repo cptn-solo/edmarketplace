@@ -94,6 +94,10 @@ async function postAllOffersToConnection(apigwManagementApi, connectionId) {
         postcalls.push(payload);
         page ++;
     }
+    if (postcalls.length === 0) {
+        // empty page if no offers available
+        postcalls.push({ code: shared.OFFER_METHOD_GET, offers: [], page: 0, ofpages: 1});
+    }
     await shared.broadcastPostCalls(postcalls.map(async (payload) => {
         await shared.postToConnection(apigwManagementApi, connectionId, payload);
     }));

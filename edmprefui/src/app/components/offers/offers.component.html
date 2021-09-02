@@ -23,7 +23,7 @@
                 <button mat-button
                     title="{{t('Copy location to clipboard')}}" cdkCopyToClipboard="{{offer.info.location}}">{{offer.info.location}}</button>
             </div>
-            <div class="right-offer-info" *ngIf="!!userInfo.offerId">
+            <div class="right-offer-info">
                 <button mat-button title="{{t('Recall Bid from Offer')}}"
                     *ngIf="bidstage.value === 'wait' || bidstage.value === 'message'" color="warn"
                     (click)="bidpull(offer)">{{t('Pull Bid')}}</button>

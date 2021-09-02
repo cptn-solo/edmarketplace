@@ -57,16 +57,7 @@ export class OfferService {
 
   connectionMonitor(connected: boolean){
     if (connected) {
-      this.api.sendMessage(
-        { "action":"offer",
-          "data": {
-            "method": OFFER_EVENT_ENLIST,
-            "payload": {
-              "token": this._token$.value
-            }
-          }
-        }
-      );
+      this.enlistUser();
     } else {
       this.state.registerUserConnection("");
     }
@@ -231,29 +222,16 @@ export class OfferService {
 
   /** sync with server */
 
-  bidPushOrPull(offerId: string, pushMode: boolean) {
+  enlistUser() {
     const token = this._token$.value;
     this.api.sendMessage(
-      { "action": "comms",
+      { "action":"offer",
         "data": {
-          "method": pushMode ? COMMS_METHOD_BIDPUSH : COMMS_METHOD_BIDPULL,
-          "payload": { token, offerId }
+          "method": OFFER_EVENT_ENLIST,
+          "payload": { token }
         }
       }
     );
-  }
-
-  sendChatMessage(message: ChatMessage): ChatMessage {
-    const token = this._token$.value;
-    this.api.sendMessage(
-      { "action": "comms",
-        "data": {
-          "method": COMMS_METHOD_MESSAGE,
-          "payload": { token, message }
-        }
-      }
-    );
-    return this.state.addOtboundMessage(message);
   }
 
   getoffers() {
@@ -265,22 +243,6 @@ export class OfferService {
         }
       }
     );
-  }
-
-  unpublishoffer() {
-    const userInfo = this._userinfo$.value;
-    this.api.sendMessage(
-      { "action": "offer",
-        "data": {
-          "method": OFFER_EVENT_DROPOFFERS,
-          "payload": {
-            "offerIds": [userInfo.offerId]
-          }
-        }
-      }
-    );
-    this.updateChangedState(true);
-    this.updatePublishedState(false);
   }
 
   publishoffer() {
@@ -312,6 +274,47 @@ export class OfferService {
     this._userinfo$.next(userInfo);
     this.updateChangedState(false);
     this.updatePublishedState(true);
+  }
+
+  unpublishoffer() {
+    const userInfo = this._userinfo$.value;
+    this.api.sendMessage(
+      { "action": "offer",
+        "data": {
+          "method": OFFER_EVENT_DROPOFFERS,
+          "payload": {
+            "offerIds": [userInfo.offerId]
+          }
+        }
+      }
+    );
+    this.updateChangedState(true);
+    this.updatePublishedState(false);
+  }
+
+  bidPushOrPull(offerId: string, myOfferId: string, pushMode: boolean) {
+    const token = this._token$.value;
+    this.api.sendMessage(
+      { "action": "comms",
+        "data": {
+          "method": pushMode ? COMMS_METHOD_BIDPUSH : COMMS_METHOD_BIDPULL,
+          "payload": { token, offerId, myOfferId }
+        }
+      }
+    );
+  }
+
+  sendChatMessage(message: ChatMessage): ChatMessage {
+    const token = this._token$.value;
+    this.api.sendMessage(
+      { "action": "comms",
+        "data": {
+          "method": COMMS_METHOD_MESSAGE,
+          "payload": { token, message }
+        }
+      }
+    );
+    return this.state.addOtboundMessage(message);
   }
 
 }

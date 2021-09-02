@@ -1,7 +1,0 @@
-{
-  "requestContext": {
-    "domainName": "fmchr7d4ea.execute-api.eu-central-1.amazonaws.com",
-    "stage": "Prod"
-  },
-  "body": "{\"data\":{\"method\":\"getoffers\"}}"
-}

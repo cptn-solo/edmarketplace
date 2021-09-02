@@ -1,8 +1,0 @@
-{
-  "requestContext": {
-    "connectionId": "D7LFmcYrliACFvQ=",
-    "domainName": "fmchr7d4ea.execute-api.eu-central-1.amazonaws.com",
-    "stage": "Prod"
-  },
-  "body": "{\"action\":\"offer\",\"data\":{\"method\":\"publishoffer\",\"payload\":{\"offerId\":\"efbbad89-8a60-461c-a808-bb07a896363c\",\"info\":{\"nickname\":\"cptn-solo\",\"location\":\"SIRIUS\"},\"items\":[{\"tradeid\":0,\"sid\":\"regulator\",\"sname\":\"regulator\",\"sstock\":2,\"supply\":2,\"did\":\"polls\",\"dname\":\"polls\",\"dstock\":0,\"demand\":1}],\"created\":1629672339375,\"expired\":1629758739375}}}"
-}

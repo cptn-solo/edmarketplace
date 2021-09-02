@@ -83,24 +83,32 @@ export class OffersComponent implements OnInit, OnDestroy {
   }
 
   bidpush(offer: Offer) {
-    if (this.userInfo.offerId.length === 0) return;
+    // TODO: let user pick his offer for bid
+    const myOfferId = this.userInfo.offerId
+    if (myOfferId.length === 0) return;
 
-    this.offers.bidPushOrPull(offer.offerId, true);
+    this.offers.bidPushOrPull(offer.offerId, myOfferId, true);
   }
 
   bidpull(offer: Offer) {
-    if (this.userInfo.offerId.length === 0) return;
+    // TODO: let user pick his offer for bid
+    const myOfferId = this.userInfo.offerId
+    if (myOfferId.length === 0) return;
 
-    this.offers.bidPushOrPull(offer.offerId, false);
+    this.offers.bidPushOrPull(offer.offerId, myOfferId, false);
   }
 
   openChatDialog(offer: Offer) {
+    // TODO: let user pick his offer for bid
+    const myOfferId = this.userInfo.offerId
+    if (myOfferId.length === 0) return;
+
     this.chatOfferId = offer.offerId;
     const dialogRef = this.dialog.open(ChatdialogComponent,
       {
         width: '520px',
         height: '520px',
-        data: { offer }
+        data: { offer, myOfferId }
       });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -125,9 +133,6 @@ export class OffersComponent implements OnInit, OnDestroy {
     this.offers.getoffers();
   }
 
-  copyToCB(text: string) {
-
-  }
   /* lifesycle */
   ngOnInit(): void {
   }
