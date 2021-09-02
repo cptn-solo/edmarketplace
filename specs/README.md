@@ -178,7 +178,7 @@ Calls and messages:
   }
 }
 
-# 3. DROPOFFERS - remove your own offer(s) from the market
+# 4. DROPOFFERS - remove your own offer(s) from the market
 
 > Outbound Call:
 
@@ -204,7 +204,7 @@ Calls and messages:
   ]
 }
 
-# 4. BIDPUSH - push a bid to other player's offer
+# 5. BIDPUSH - push a bid to other player's offer
 
 > Outbound Call:
 
@@ -239,7 +239,7 @@ Calls and messages:
   }
 }
 
-# 5. BIDPULL - pull (recall) your bid from other player's offer
+# 6. BIDPULL - pull (recall) your bid from other player's offer
 
 > Outbound Call:
 
@@ -270,7 +270,7 @@ Calls and messages:
   }
 }
 
-# 6. MESSAGE - send a chat message to an offer's owner
+# 7. MESSAGE - send a chat message to an offer's owner
 
 > Outbound Call:
 
@@ -304,7 +304,7 @@ Calls and messages:
   }
 }
 
-# Messages broadcasted on user online status change:
+# 8. Messages broadcasted on user online status change:
 
 > Inbound Message:
 - Broadcasted when a user goes Online
