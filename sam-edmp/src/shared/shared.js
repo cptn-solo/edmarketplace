@@ -1,4 +1,5 @@
 const AWS = require('aws-sdk');
+const utils = require('./utils.js');
 
 const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: process.env.AWS_REGION });
 
@@ -124,7 +125,7 @@ exports.getValidPublicOffers = async () => {
             var today = new Date().getTime();
             var offers = result.Items.filter(c => c.expired >= today);
             // remove non-public data:
-            offers = offers.map(offer => Object.assign(offer, { token: "" }));
+            offers = offers.map(offer => Object.assign(offer, { token: utils.sha256(offer.token) }));
             return offers;
         }
     } catch (e) {
