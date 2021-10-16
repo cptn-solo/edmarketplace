@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/internal/operators/takeUntil';
 import { EdmpwsapiService } from './services/edmpwsapi.service';
 import { OfferService } from './services/offer.service';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -27,6 +28,7 @@ export class AppComponent implements OnDestroy, OnInit {
   private _mobileQueryListener: () => void;
 
   constructor(
+    private authService: AuthService,
     private api: EdmpwsapiService,
     private offers: OfferService,
     private changeDetectorRef: ChangeDetectorRef,
@@ -50,6 +52,10 @@ export class AppComponent implements OnDestroy, OnInit {
 
   ngOnInit() {
     this.connect();
+    this.authService
+      .checkAuth()
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe((isAuthenticated) => console.log('AppComponent - ngOnInit - app authenticated', isAuthenticated));
   }
 
   ngOnDestroy() {

@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -28,15 +28,44 @@ import { MyinfoeditComponent } from './components/myinfoedit/myinfoedit.componen
 import { TradeitemeditComponent } from './components/tradeitemedit/tradeitemedit.component';
 import { MytradeitemseditComponent } from './components/mytradeitemsedit/mytradeitemsedit.component';
 import { ChatdialogComponent } from './components/chatdialog/chatdialog.component';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { TranslocoRootModule } from './transloco/transloco-root.module';
 import { LocalesComponent } from './components/locales/locales.component';
 import { TradeitemComponent } from './components/tradeitem/tradeitem.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
 import { MyidComponent } from './components/myid/myid.component';
-import { ClipboardModule } from '@angular/cdk/clipboard'
+import { ClipboardModule } from '@angular/cdk/clipboard';
+import { AuthModule, AuthInterceptor, AuthWellKnownEndpoints } from 'angular-auth-oidc-client';
+import { AuthComponent } from './components/auth/auth.component';
+const wnendpoints = {
+  issuer: environment.fdAuthority,
+  jwksUri: environment.fdAuthority,
+  authorizationEndpoint: environment.fdAuthority+'/auth',
+  tokenEndpoint: environment.fdAuthority+'/token',
+  // userInfoEndpoint?: string;
+  // endSessionEndpoint?: string;
+  // checkSessionIframe?: string;
+  // revocationEndpoint?: string;
+  // introspectionEndpoint?: string;
+  // parEndpoint?: string;
+} as AuthWellKnownEndpoints;
 
+const oauthcfg = {
+  authWellknownEndpoints: wnendpoints,
+  authority: environment.fdAuthority,
+  redirectUrl: window.location.origin,
+  postLogoutRedirectUri: window.location.origin,
+  clientId: environment.fdClientId, //'devkit-clients-spa.pkce'
+  scope: 'auth capi', //'openid profile email roles app.api.employeeprofile.read'
+  responseType: 'code',
+  silentRenew: true,
+  silentRenewUrl: '${window.location.origin}/silent-renew.html',
+  useRefreshToken: true,
+  postLoginRoute: window.location.origin,
+  renewTimeBeforeTokenExpiresInSeconds: 30,
+  logLevel: 3,
+};
 @NgModule({
   declarations: [
     AppComponent,
@@ -49,7 +78,8 @@ import { ClipboardModule } from '@angular/cdk/clipboard'
     ChatdialogComponent,
     LocalesComponent,
     TradeitemComponent,
-    MyidComponent
+    MyidComponent,
+    AuthComponent
   ],
   imports: [
     BrowserModule,
@@ -81,6 +111,9 @@ import { ClipboardModule } from '@angular/cdk/clipboard'
       // or after 30 seconds (whichever comes first).
       registrationStrategy: 'registerWhenStable:30000'
     }),
+    AuthModule.forRoot({
+      config: oauthcfg
+    })
   ],
   providers: [
     { provide: MAT_DIALOG_DEFAULT_OPTIONS,
@@ -89,7 +122,11 @@ import { ClipboardModule } from '@angular/cdk/clipboard'
         // backdropClass: "mat-app-background",
         hasBackdrop: true
       }
-    }
+    },
+    { provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    },
   ],
   bootstrap: [AppComponent]
 })

@@ -4,7 +4,10 @@
 
 export const environment = {
   production: false,
-  wsEndpoint: 'wss://###.execute-api.eu-central-1.amazonaws.com/Prod/'
+  wsEndpoint: 'wss://###.execute-api.eu-central-1.amazonaws.com/Prod/',
+  fdClientId: 'client-id', //https://user.frontierstore.net/developer
+  fdAuthority: 'https://auth.frontierstore.net/auth',
+  fdCapiEndpointUrl: 'https://companion.orerve.net'
 };
 
 /*
