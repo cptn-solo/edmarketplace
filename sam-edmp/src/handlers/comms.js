@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const shared = require('../shared/shared.js');
+const utils = require('../shared/utils.js');
 
 const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: process.env.AWS_REGION });
 
@@ -23,11 +24,32 @@ exports.comms = async event => {
         switch (eventBody.data.method) {
             case shared.COMMS_METHOD_BIDPUSH:
                 await addOrRemoveBid(apigwManagementApi, connectionid,
-                    eventBody.data.payload.token, eventBody.data.payload.offerId, eventBody.data.payload.myOfferId, true);
+                    eventBody.data.payload.token,
+                    eventBody.data.payload.offerId,
+                    eventBody.data.payload.myOfferId, true);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_BIDPULL:
                 await addOrRemoveBid(apigwManagementApi, connectionid,
-                    eventBody.data.payload.token, eventBody.data.payload.offerId, eventBody.data.payload.myOfferId, false);
+                    eventBody.data.payload.token,
+                    eventBody.data.payload.offerId,
+                    eventBody.data.payload.myOfferId, false);
+                return { statusCode: 200, body: JSON.stringify({ connectionid })};
+            case shared.COMMS_METHOD_XBIDPUSH:
+                await addOrRemoveXBid(apigwManagementApi, connectionid,
+                    eventBody.data.payload.token,
+                    eventBody.data.payload.offerId, true);
+                return { statusCode: 200, body: JSON.stringify({ connectionid })};
+            case shared.COMMS_METHOD_XBIDPULL:
+                await addOrRemoveXBid(apigwManagementApi, connectionid,
+                    eventBody.data.payload.token,
+                    eventBody.data.payload.offerId, false);
+                return { statusCode: 200, body: JSON.stringify({ connectionid })};
+            case shared.COMMS_METHOD_BIDACCEPT:
+                await acceptXBid (apigwManagementApi, connectionid,
+                    eventBody.data.payload.token, // own token
+                    eventBody.data.payload.offerId, // offer bein processed
+                    eventBody.data.payload.tokenhash, // hashed token of the other party to accept/decline
+                    eventBody.data.payload.accept); // true/false for accept/decline
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_MESSAGE:
                 await forwardMessage(apigwManagementApi, connectionid,
@@ -131,6 +153,91 @@ async function addOrRemoveBid (apigwManagementApi, connectionId, token, offerId,
         ]);
     } catch (e) {
         console.log('addOrRemoveBid failed: ' + e.message);
+        return false;
+    }
+
+
+    return true;
+}
+
+async function addOrRemoveXBid (apigwManagementApi, connectionId, token, offerId, addMode) {
+    const trace = await shared.getTrace(token);
+
+    try {
+
+        const offer = await shared.getOffer(offerId);
+
+        if (!offer)
+            throw new Error('no their offer');
+
+        if (!offer.xbids || offer.xbids === undefined) {
+            offer.xbids = [];
+        }
+        const idx = offer.xbids.findIndex(b => b.token === token);
+        if (idx < 0 && addMode) {
+            offer.xbids.push({ 
+                token,
+                tokenhash: utils.sha256(token), // precalculate for future use
+                accepted: false });
+        } else if (idx >= 0 && !addMode) {
+            offer.xbids.splice(idx, 1);
+            // TODO: leave this method to prevent spamming.
+            // for now just for debug purposes we push event to parties even
+            // if a bid already added to an offer
+        } else {
+            throw new Error('no need to communicate');
+        }
+        await shared.putOffer(offer);
+        const code = addMode ? shared.COMMS_METHOD_XBIDPUSH : shared.COMMS_METHOD_XBIDPULL;
+        const payload = { code , offer: shared.hashToken(offer) };
+        // both sides should get notified about bid being placed/removed
+        await Promise.all([
+            shared.postToConnection(apigwManagementApi, offer.connectionId, payload),
+            shared.postToConnection(apigwManagementApi, connectionId, payload)
+        ]);
+    } catch (e) {
+        console.log('addOrRemoveBid failed: ' + e.message);
+        return false;
+    }
+
+
+    return true;
+}
+
+async function acceptXBid (apigwManagementApi, connectionId, token, offerId, tokenhash, accept) {
+    try {
+
+        const offer = await shared.getOffer(offerId);
+
+        if (!offer)
+            throw new Error('no my offer');
+        
+        if (offer.token !== token)
+            throw new Error('offer ownership required');
+
+        if (!offer.xbids || offer.xbids === undefined) {
+            offer.xbids = [];
+        }
+        const idx = offer.xbids.findIndex(b => b.tokenhash === tokenhash);
+        var notifyTrace = null;
+        if (idx >= 0) {
+            var xbid = offer.xbids[idx];
+            xbid.accepted = accept;
+            offer.xbids[idx] = xbid;
+            notifyTrace = await shared.getTrace(xbid.token);
+        } else {
+            throw new Error('no xbid to accept');
+        }
+        await shared.putOffer(offer);
+        const code = shared.COMMS_METHOD_BIDACCEPT;
+        const payload = { code , offer: shared.hashToken(offer) };
+        // both sides should be notified about bid being accepted/declined
+        await Promise.all([
+            shared.postToConnection(apigwManagementApi, connectionId, payload),
+            shared.postToConnection(apigwManagementApi, notifyTrace ? notifyTrace.connectionId : "", payload)
+        ]);
+    } catch (e) {
+        console.log('acceptXBid failed: ' + e.message);
         return false;
     }
 

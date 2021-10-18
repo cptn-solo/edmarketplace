@@ -10,10 +10,13 @@ exports.OFFER_METHOD_REMOVE = "dropoffers";
 exports.OFFER_EVENT_ONLINE = "onlineoffers";
 exports.OFFER_EVENT_OFFLINE = "offlineoffers";
 
-exports.COMMS_METHOD_BIDPUSH = "bidpush";
-exports.COMMS_METHOD_BIDPULL = "bidpull";
+exports.COMMS_METHOD_BIDPUSH = "bidpush"; // to push a bid using an offer id
+exports.COMMS_METHOD_BIDPULL = "bidpull"; // to revoke a bid using an offer id
 exports.COMMS_METHOD_BIDACCEPT = "bidaccept";
 exports.COMMS_METHOD_MESSAGE = "message";
+
+exports.COMMS_METHOD_XBIDPUSH = "xbidpush"; // to push a bid using a token
+exports.COMMS_METHOD_XBIDPULL = "xbidpull"; // to revoke a bid using a token
 
 
 /** utilities */
@@ -56,7 +59,7 @@ exports.putConnection = async (connection) => {
         throw e;
     }
     return connection;
-}
+};
 
 
 exports.getTrace = async (token) => {
@@ -67,12 +70,12 @@ exports.getTrace = async (token) => {
     console.log('getTrace'+JSON.stringify(params));
     try {
         var result = await ddb.get(params).promise();
-        return result.Item
+        return result.Item;
     } catch (e) {
         console.log('getTrace failed: ' + JSON.stringify(e));
         throw e;
     }
-}
+};
 
 exports.putTrace = async (trace) => {
     const params = {
@@ -86,7 +89,14 @@ exports.putTrace = async (trace) => {
         throw e;
     }
     return trace;
-}
+};
+
+exports.hashToken = async (offer) => {
+    offer.token = utils.sha256(offer.token);
+    offer.xbids = (offer.xbids === undefined || !offer.xbids) ?
+        [] :
+        offer.xbids.map(xbid => xbid.token = "");
+};
 
 exports.getOffer = async (offerId) => {
     try {
