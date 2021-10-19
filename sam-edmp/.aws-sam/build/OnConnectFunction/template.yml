@@ -158,9 +158,7 @@ Resources:
       KeySchema:
       - AttributeName: "connectionId"
         KeyType: "HASH"
-      ProvisionedThroughput:
-        ReadCapacityUnits: 10
-        WriteCapacityUnits: 10
+      BillingMode: "PAY_PER_REQUEST"
       SSESpecification:
         SSEEnabled: True
       TableName: !Ref ConnTableName
@@ -175,9 +173,7 @@ Resources:
       KeySchema:
       - AttributeName: "token"
         KeyType: "HASH"
-      ProvisionedThroughput:
-        ReadCapacityUnits: 10
-        WriteCapacityUnits: 10
+      BillingMode: "PAY_PER_REQUEST"
       SSESpecification:
         SSEEnabled: True
       TableName: !Ref TraceTableName
@@ -192,9 +188,7 @@ Resources:
       KeySchema:
       - AttributeName: "offerId"
         KeyType: "HASH"
-      ProvisionedThroughput:
-        ReadCapacityUnits: 10
-        WriteCapacityUnits: 10
+      BillingMode: "PAY_PER_REQUEST"
       SSESpecification:
         SSEEnabled: True
       TableName: !Ref OfferTableName
@@ -206,7 +200,7 @@ Resources:
       Handler: src/handlers/on-connect.onConnect
       MemorySize: 256
       Runtime: nodejs14.x
-      Timeout: 100
+      Timeout: 50
       Description: A Lambda function that handles connection of a user.
       Environment:
         Variables:
@@ -236,7 +230,7 @@ Resources:
       Handler: src/handlers/on-disconnect.onDisconnect
       MemorySize: 256
       Runtime: nodejs14.x
-      Timeout: 100
+      Timeout: 50
       Description: A Lambda function that handles disconnection of a user.
       Environment:
         Variables:
@@ -272,7 +266,7 @@ Resources:
       Handler: src/handlers/offer.offer
       MemorySize: 256
       Runtime: nodejs14.x
-      Timeout: 100
+      Timeout: 50
       Description: A Lambda function that process actions related to offers (publish, get list, remove).
       Environment:
         Variables:
@@ -308,7 +302,7 @@ Resources:
       Handler: src/handlers/comms.comms
       MemorySize: 256
       Runtime: nodejs14.x
-      Timeout: 100
+      Timeout: 50
       Description: A Lambda function that process actions related to communications between parties (bids, messages).
       Environment:
         Variables:

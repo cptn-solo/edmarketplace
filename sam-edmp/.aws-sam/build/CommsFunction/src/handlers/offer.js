@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const shared = require('../shared/shared.js');
+const utils = require('../shared/utils.js');
 
 const BROADCAST_BATCH_SIZE = 20; // offers per broadcast
 
@@ -28,8 +29,9 @@ exports.offer = async event => {
                 return { statusCode: 200, body: JSON.stringify({ trace, offers })};
             }
             case shared.OFFER_METHOD_PUBLISH: {
+                const connection = await shared.getConnection(connectionid);
                 // 1. store new/updated offer data
-                const offer = await publishOffer(connectionid, eventBody.data.payload);
+                const offer = await publishOffer(connection, eventBody.data.payload);
                 // 2. broadcast this offer to all connected users
                 await broadcastOffer(apigwManagementApi, offer);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
@@ -72,13 +74,17 @@ async function getOrCreateUserTrace(connectionId, token) {
 
 async function postEnlistResponce(apigwManagementApi, trace) {
     const offers = await shared.getOffersByIds(trace.offers);
-    const payload = { code: shared.OFFER_METHOD_ENLIST, trace, offers };
+    const payload = {
+        code: shared.OFFER_METHOD_ENLIST,
+        trace,
+        offers: offers.map(offer => shared.hashToken(offer))
+    };
     await apigwManagementApi.postToConnection({ ConnectionId: trace.connectionId, Data: JSON.stringify(payload) }).promise();
     return offers;
 }
 
 async function broadcastOfferWentOnline(apigwManagementApi, trace) {
-    await shared.broadcastOffersOnline(apigwManagementApi, trace.offers, trace.connectionId);
+    await shared.broadcastOffersOnline(apigwManagementApi, trace.offers, trace.connectionId, true);
 }
 
 async function postAllOffersToConnection(apigwManagementApi, connectionId) {
@@ -94,6 +100,10 @@ async function postAllOffersToConnection(apigwManagementApi, connectionId) {
         postcalls.push(payload);
         page ++;
     }
+    if (postcalls.length === 0) {
+        // empty page if no offers available
+        postcalls.push({ code: shared.OFFER_METHOD_GET, offers: [], page: 0, ofpages: 1});
+    }
     await shared.broadcastPostCalls(postcalls.map(async (payload) => {
         await shared.postToConnection(apigwManagementApi, connectionId, payload);
     }));
@@ -106,7 +116,7 @@ async function broadcastOffer(apigwManagementApi, offer) {
         try {
             const payload = {
                 code: shared.OFFER_METHOD_PUBLISH,
-                offer: Object.assign(offer, { token: ""})
+                offer: shared.hashToken(offer)
             };
             await shared.postToConnection(apigwManagementApi, connectionId, payload);
         } catch (e) {
@@ -115,18 +125,20 @@ async function broadcastOffer(apigwManagementApi, offer) {
     }));
 }
 
-async function publishOffer(connectionId, offer) {
+async function publishOffer(connection, offer) {
     try {
-        const connection = await shared.getConnection(connectionId);
         const trace = await shared.getTrace(connection.token);
-        const _offer = Object.assign({
-            connectionId: connectionId,
+        const _offer = Object.assign(offer, {
+            connectionId: connection.connectionId,
             token: trace.token
-        }, offer);
+        });
+        if (_offer.offerId === undefined || !_offer.offerId || _offer.offerId.length === 0) {
+            _offer.offerId = utils.uuidv4();
+        }
         await shared.putOffer(_offer);
-        const idx = trace.offers.findIndex(f => f === offer.offerId);
+        const idx = trace.offers.findIndex(f => f === _offer.offerId);
         if (idx < 0) {
-            trace.offers.push(offer.offerId);
+            trace.offers.push(_offer.offerId);
             await shared.putTrace(trace);
         }
         return _offer;

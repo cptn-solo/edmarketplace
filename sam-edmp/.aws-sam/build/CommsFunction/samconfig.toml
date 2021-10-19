@@ -2,10 +2,10 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "edmp9"
+stack_name = "edmp12"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-2a2wumw7779e"
-s3_prefix = "edmp9"
+s3_prefix = "edmp12"
 region = "eu-central-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "ConnTableName=\"conns_b\" TraceTableName=\"traces_b\" OfferTableName=\"offers_b\""
+parameter_overrides = "ConnTableName=\"conns_d\" TraceTableName=\"traces_d\" OfferTableName=\"offers_d\""
