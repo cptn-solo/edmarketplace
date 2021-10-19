@@ -10,7 +10,7 @@ Calls and messages:
   "data": {
     "method": "enlist",
     "payload": {
-      "token": "xxxxxxxx-da8c-48a9-a28f-xxxxxxxxxxxx"  // GUID provided by the backend on 1st connection or any arbitrary unique ID
+      "token": NON_HASHED_TOKEN  // GUID provided by the backend on 1st connection or any arbitrary unique ID
     }
   }
 }
@@ -20,12 +20,13 @@ Calls and messages:
 {
   "code":"enlist",
   "trace":{ // trace is basically an index of user's offers and a link between his TOKEN and current connection id
-    "token":HASHED_TOKEN,
+    "token":NON_HASHED_TOKEN,
     "connectionId":"FCaHGcVDliACGeQ=",
     "offers":[
       "02a69a39-15bc-47e7-ad3a-e9dcd7e153a1"
     ]
   },
+  "tokenHash":HASHED_TOKEN,
   "offers":[
     { // see `2. GETOFFERS` for comments, here just some of them
       "offerId":"02a69a39-15bc-47e7-ad3a-e9dcd7e153a1",
@@ -88,7 +89,7 @@ Calls and messages:
       ],
       "xbids"[            // tokens of bidders
         {
-          "token":TOKEN,
+          "token":"",
           "tokenhash":HASHED_TOKEN,
           "accepted":true|false
         }, ...
@@ -159,7 +160,7 @@ Calls and messages:
   "offer":{ // same as in `2. GETOFFERS`, just one offer
     "offerId":"02a69a39-15bc-47e7-ad3a-e9dcd7e153a1",
     "connectionId":"FCaHGcVDliACGeQ=",
-    "token":"",
+    "token":HASHED_TOKEN,
     "info":{
       "nickname":"Cptn-trio",
       "location":"The Bubble"
@@ -443,7 +444,7 @@ Calls and messages:
     "method":"xmessage",
     "payload":{
       "message":{
-        "tokenhash:HASHED_TOKEN,                          // receiver's token hash, not required if sent to offer owner
+        "tokenhash":HASHED_TOKEN,                          // receiver's token hash, not required if sent to offer owner
         "offerId":"63271c30-d8cb-43b1-9530-4a51e738ce5b", // message context offer
         "text":"hey",
         "date":1630595348931
