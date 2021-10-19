@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2021-10-18T11:30:01.980Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36" etag="SCOIky1-bs6BpjBeonj6" version="14.9.8" type="github">
+<mxfile host="app.diagrams.net" modified="2021-10-19T11:50:27.213Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36" etag="S8X8YmBFIbBvQv7LkLFH" version="15.5.5" type="github">
   <diagram id="4MPC-70Ac1xWpYq3L0gV" name="Comms">
     <mxGraphModel dx="2125" dy="841" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -167,7 +167,7 @@
         <mxCell id="n1u6C8sD2J4n8uzn6Pmf-16" value="+ bids: [offerid]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="8upA7-bUKmXSz76la_48-9" vertex="1">
           <mxGeometry y="156" width="259" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="jav2olXAPoQWr6h4PYRB-1" value="+ xbids: [{ token, tokenhash, accepted }]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="8upA7-bUKmXSz76la_48-9">
+        <mxCell id="jav2olXAPoQWr6h4PYRB-1" value="+ xbids: [{ token, tokenhash, accepted }]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="8upA7-bUKmXSz76la_48-9" vertex="1">
           <mxGeometry y="182" width="259" height="26" as="geometry" />
         </mxCell>
         <mxCell id="8upA7-bUKmXSz76la_48-15" value="+ created: timestamp" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="8upA7-bUKmXSz76la_48-9" vertex="1">
@@ -811,8 +811,8 @@
         <mxCell id="JXXGcR44367XRLkE0NZI-1" value="&lt;span style=&quot;background-color: rgb(255 , 255 , 255)&quot;&gt;{ code: &quot;enlist&quot;,&lt;br&gt;&amp;nbsp; trace,&lt;br&gt;&amp;nbsp; offers }&lt;br&gt;&lt;/span&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;" parent="fXBi3EkeCqByKa08R1XL-1" vertex="1">
           <mxGeometry x="-120" y="1380" width="180" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="SsFwn5KyuXT6SuuciOU4-0" value="hashed" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;" parent="fXBi3EkeCqByKa08R1XL-1" vertex="1">
-          <mxGeometry x="810" y="423" width="50" height="20" as="geometry" />
+        <mxCell id="SsFwn5KyuXT6SuuciOU4-0" value="non-hashed&amp;nbsp;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;" parent="fXBi3EkeCqByKa08R1XL-1" vertex="1">
+          <mxGeometry x="810" y="423" width="80" height="20" as="geometry" />
         </mxCell>
         <mxCell id="VlgOpsBRtgqUH-DEmoJL-0" value="&lt;span style=&quot;background-color: rgb(255 , 255 , 255)&quot;&gt;{ code: &quot;onlineoffers&quot;,&lt;br&gt;&amp;nbsp; offerIds,&lt;br&gt;&amp;nbsp; connectionId&lt;br&gt;}&lt;br&gt;&lt;/span&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;" parent="fXBi3EkeCqByKa08R1XL-1" vertex="1">
           <mxGeometry x="-120" y="1480" width="180" height="90" as="geometry" />
@@ -859,8 +859,86 @@
         <mxCell id="sCAkgt_kXe25KfjjZTuc-1" value="{ action: &quot;comms&quot;,&lt;br&gt;&amp;nbsp; data: {&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;method: &quot;message&quot;&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;payload: {&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; token, { &lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;offerId, inbound, date, text }&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;}&lt;br&gt;&amp;nbsp; }&lt;br&gt;      }" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;fillColor=#FFFFFF;" parent="fXBi3EkeCqByKa08R1XL-1" vertex="1">
           <mxGeometry x="-141" y="4780" width="210" height="130" as="geometry" />
         </mxCell>
-        <mxCell id="jav2olXAPoQWr6h4PYRB-2" value="array of non-hashed &lt;br&gt;tokens from other parties" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;" vertex="1" parent="fXBi3EkeCqByKa08R1XL-1">
+        <mxCell id="jav2olXAPoQWr6h4PYRB-2" value="array of non-hashed &lt;br&gt;tokens from other parties" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;" parent="fXBi3EkeCqByKa08R1XL-1" vertex="1">
           <mxGeometry x="810" y="555" width="150" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-0" value="&lt;div&gt;&lt;b&gt;comms:xmessage&lt;/b&gt;&lt;span&gt;&amp;nbsp;to send xmessage (only for offers with accepted xbids)&lt;/span&gt;&lt;/div&gt;" style="shape=umlFrame;whiteSpace=wrap;html=1;verticalAlign=top;width=410;height=30;align=left;spacingLeft=8;fillColor=#FFFFFF;" vertex="1" parent="fXBi3EkeCqByKa08R1XL-1">
+          <mxGeometry x="996" y="4690" width="790" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="fXBi3EkeCqByKa08R1XL-1" source="VZ8CV4T6ZDdpbxHMi_fs-3" target="VZ8CV4T6ZDdpbxHMi_fs-6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1187" y="4830" />
+              <mxPoint x="1187" y="4830" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-2" value="connectionid+&lt;br&gt;offerid+token&lt;br&gt;+message" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="VZ8CV4T6ZDdpbxHMi_fs-1">
+          <mxGeometry x="-0.1653" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-3" value="User" style="shape=umlLifeline;participant=umlActor;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;" vertex="1" parent="fXBi3EkeCqByKa08R1XL-1">
+          <mxGeometry x="1046" y="4740" width="20" height="310" as="geometry" />
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-4" value="API" style="shape=umlLifeline;participant=umlEntity;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;" vertex="1" parent="fXBi3EkeCqByKa08R1XL-1">
+          <mxGeometry x="1277" y="4735" width="110" height="315" as="geometry" />
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="VZ8CV4T6ZDdpbxHMi_fs-4" source="VZ8CV4T6ZDdpbxHMi_fs-6" target="VZ8CV4T6ZDdpbxHMi_fs-7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="195" />
+              <mxPoint x="150" y="265" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-6" value="&amp;lt;comms:xmessage&amp;gt;&lt;br&gt;checks if offer has&lt;br&gt;accepted xbid&lt;br&gt;and active&lt;br&gt;connection&lt;br&gt;and sends a &lt;i&gt;message&lt;br&gt;&lt;/i&gt;to a party&lt;br&gt;(validates ownership)" style="html=1;points=[];perimeter=orthogonalPerimeter;verticalAlign=top;" vertex="1" parent="VZ8CV4T6ZDdpbxHMi_fs-4">
+          <mxGeometry x="-20" y="80" width="120" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-7" value="send other party&lt;br&gt;a message" style="html=1;points=[];perimeter=orthogonalPerimeter;verticalAlign=top;" vertex="1" parent="VZ8CV4T6ZDdpbxHMi_fs-4">
+          <mxGeometry x="-20" y="235" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-8" value="API DB" style="shape=umlLifeline;participant=umlEntity;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;" vertex="1" parent="fXBi3EkeCqByKa08R1XL-1">
+          <mxGeometry x="1577" y="4735" width="110" height="315" as="geometry" />
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-9" value="[OFFER_TABLE]&lt;br&gt;get offer by &lt;i&gt;offerid&lt;/i&gt;&lt;br&gt;and checks for &lt;br&gt;connectionid" style="html=1;points=[];perimeter=orthogonalPerimeter;" vertex="1" parent="fXBi3EkeCqByKa08R1XL-1">
+          <mxGeometry x="1582" y="4822" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-10" value="offerid+myofferid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="fXBi3EkeCqByKa08R1XL-1" source="VZ8CV4T6ZDdpbxHMi_fs-6" target="VZ8CV4T6ZDdpbxHMi_fs-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1507" y="4840" />
+              <mxPoint x="1507" y="4840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="fXBi3EkeCqByKa08R1XL-1" source="VZ8CV4T6ZDdpbxHMi_fs-9" target="VZ8CV4T6ZDdpbxHMi_fs-6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1439" y="4910" />
+              <mxPoint x="1439" y="4910" />
+            </Array>
+            <mxPoint x="1581.9999999999998" y="5020" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-12" value="connectionid" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="VZ8CV4T6ZDdpbxHMi_fs-11">
+          <mxGeometry x="-0.0796" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-13" value="&lt;i&gt;message&amp;nbsp;&lt;/i&gt;message" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=#CCFF99;" edge="1" parent="fXBi3EkeCqByKa08R1XL-1" source="VZ8CV4T6ZDdpbxHMi_fs-7" target="VZ8CV4T6ZDdpbxHMi_fs-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1159" y="5000" />
+              <mxPoint x="1159" y="5000" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-14" value="&lt;span style=&quot;background-color: rgb(255 , 255 , 255)&quot;&gt;{ code: &quot;x&lt;/span&gt;message&lt;span style=&quot;background-color: rgb(255 , 255 , 255)&quot;&gt;&quot;,&lt;br&gt;&amp;nbsp; {&amp;nbsp;&lt;/span&gt;tokenhash, offerId, inbound, date, text&amp;nbsp;&lt;span style=&quot;background-color: rgb(255 , 255 , 255)&quot;&gt;}&lt;br&gt;}&lt;br&gt;&lt;/span&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;fillColor=#FFFFFF;" vertex="1" parent="fXBi3EkeCqByKa08R1XL-1">
+          <mxGeometry x="830" y="4960" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="VZ8CV4T6ZDdpbxHMi_fs-15" value="{ action: &quot;comms&quot;,&lt;br&gt;&amp;nbsp; data: {&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;method: &quot;xmessage&quot;&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;payload: {&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; token, { &lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;tokenhash, offerId, inbound, date, text }&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;}&lt;br&gt;&amp;nbsp; }&lt;br&gt;      }" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;fillColor=#FFFFFF;" vertex="1" parent="fXBi3EkeCqByKa08R1XL-1">
+          <mxGeometry x="838" y="4780" width="210" height="130" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
