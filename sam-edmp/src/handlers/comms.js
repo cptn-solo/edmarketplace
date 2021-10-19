@@ -24,40 +24,34 @@ exports.comms = async event => {
         switch (eventBody.data.method) {
             case shared.COMMS_METHOD_BIDPUSH:
                 await addOrRemoveBid(apigwManagementApi, connectionid,
-                    eventBody.data.payload.token,
                     eventBody.data.payload.offerId,
                     eventBody.data.payload.myOfferId, true);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_BIDPULL:
                 await addOrRemoveBid(apigwManagementApi, connectionid,
-                    eventBody.data.payload.token,
                     eventBody.data.payload.offerId,
                     eventBody.data.payload.myOfferId, false);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_MESSAGE:
                 await forwardMessage(apigwManagementApi, connectionid,
-                    eventBody.data.payload.token, eventBody.data.payload.message);
+                    eventBody.data.payload.message);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_XBIDPUSH:
                 await addOrRemoveXBid(apigwManagementApi, connectionid,
-                    eventBody.data.payload.token,
                     eventBody.data.payload.offerId, true);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_XBIDPULL:
                 await addOrRemoveXBid(apigwManagementApi, connectionid,
-                    eventBody.data.payload.token,
                     eventBody.data.payload.offerId, false);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_XBIDACCEPT:
                 await acceptOrDeclineXBid (apigwManagementApi, connectionid,
-                    eventBody.data.payload.token, // own token
                     eventBody.data.payload.offerId, // offer bein processed
                     eventBody.data.payload.tokenhash, // hashed token of the other party to accept/decline
                     eventBody.data.payload.accept); // true/false for accept/decline
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_XMESSAGE:
-                await forwardXMessage(apigwManagementApi,
-                    eventBody.data.payload.token,
+                await forwardXMessage(apigwManagementApi, connectionid,
                     eventBody.data.payload.message);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             default:
@@ -69,8 +63,9 @@ exports.comms = async event => {
     }
 };
 
-async function forwardMessage (apigwManagementApi, connectionId, token, message) {
-    const trace = await shared.getTrace(token);
+async function forwardMessage (apigwManagementApi, connectionId, message) {
+    const connection = await shared.getConnection(connectionId);
+    const trace = await shared.getTrace(connection.token);
 
     try {
         if (trace.offers.length === 0)
@@ -122,8 +117,9 @@ async function forwardMessage (apigwManagementApi, connectionId, token, message)
     return true;
 }
 
-async function addOrRemoveBid (apigwManagementApi, connectionId, token, offerId, myOfferId, addMode) {
-    const trace = await shared.getTrace(token);
+async function addOrRemoveBid (apigwManagementApi, connectionId, offerId, myOfferId, addMode) {
+    const connection = await shared.getConnection(connectionId);
+    const trace = await shared.getTrace(connection.token);
 
     try {
         if (trace.offers.length === 0)
@@ -166,7 +162,9 @@ async function addOrRemoveBid (apigwManagementApi, connectionId, token, offerId,
 
 /* Support for implicit bids (bid with bidder token instead of bidder offer) */
 
-async function addOrRemoveXBid (apigwManagementApi, connectionId, token, offerId, addMode) {
+async function addOrRemoveXBid (apigwManagementApi, connectionId, offerId, addMode) {
+
+    const connection = await shared.getConnection(connectionId);
 
     try {
 
@@ -178,11 +176,11 @@ async function addOrRemoveXBid (apigwManagementApi, connectionId, token, offerId
         if (!offer.xbids || offer.xbids === undefined) {
             offer.xbids = [];
         }
-        const idx = offer.xbids.findIndex(b => b.token === token);
+        const idx = offer.xbids.findIndex(b => b.token === connection.token);
         if (idx < 0 && addMode) {
             offer.xbids.push({ 
-                token,
-                tokenhash: utils.sha256(token), // precalculate for future use
+                token: connection.token,
+                tokenhash: utils.sha256(connection.token), // precalculate for future use
                 accepted: false });
         } else if (idx >= 0 && !addMode) {
             offer.xbids.splice(idx, 1);
@@ -208,7 +206,10 @@ async function addOrRemoveXBid (apigwManagementApi, connectionId, token, offerId
     return true;
 }
 
-async function acceptOrDeclineXBid (apigwManagementApi, connectionId, token, offerId, tokenhash, accept) {
+async function acceptOrDeclineXBid (apigwManagementApi, connectionId, offerId, tokenhash, accept) {
+
+    const connection = await shared.getConnection(connectionId);
+
     try {
 
         const offer = await shared.getOffer(offerId);
@@ -216,7 +217,7 @@ async function acceptOrDeclineXBid (apigwManagementApi, connectionId, token, off
         if (!offer)
             throw new Error('no my offer');
 
-        if (offer.token !== token)
+        if (offer.token !== connection.token)
             throw new Error('offer ownership required');
 
         if (!offer.xbids || offer.xbids === undefined) {
@@ -250,7 +251,6 @@ async function acceptOrDeclineXBid (apigwManagementApi, connectionId, token, off
 }
 
 /*
-    token - non-hashed token of the message sender
     message - {
         tokenhash - hashed token of a party being communicated (required if 
                     a message is being sent to a bidder),
@@ -262,7 +262,9 @@ async function acceptOrDeclineXBid (apigwManagementApi, connectionId, token, off
     will forward the `message` object by setting a `tokenhash` field
     to sender's hashed token value to let the receiver know the sender
 */
-async function forwardXMessage (apigwManagementApi, token, message) {
+async function forwardXMessage (apigwManagementApi, connectionId, message) {
+
+    const connection = await shared.getConnection(connectionId);
 
     try {
 
@@ -280,11 +282,11 @@ async function forwardXMessage (apigwManagementApi, token, message) {
         console.log('message: offer xbids: '+JSON.stringify(offer.xbids));
 
         // check if the offer is mine
-        const isMyOffer = offer.token === token;
+        const isMyOffer = offer.token === connection.token;
 
         const idx1 = offer.xbids.findIndex(b => isMyOffer ?
             b.tokenhash === message.tokenhash :
-            b.token === token);
+            b.token === connection.token);
 
         if (idx1 < 0)
             throw new Error('no their xbid for my offer');
@@ -299,7 +301,9 @@ async function forwardXMessage (apigwManagementApi, token, message) {
         const code = shared.COMMS_METHOD_XMESSAGE;
         const payload = {
             code,
-            message: Object.assign(message, { tokenhash: utils.sha256(token) })
+            message: Object.assign(message, {
+                tokenhash: utils.sha256(connection.token)
+            })
         };
         console.log('forwardMessage: ' + JSON.stringify(payload));
 

@@ -20,7 +20,7 @@ Calls and messages:
 {
   "code":"enlist",
   "trace":{ // trace is basically an index of user's offers and a link between his TOKEN and current connection id
-    "token":"xxxxxxxx-da8c-48a9-a28f-xxxxxxxxxxxx",
+    "token":HASHED_TOKEN,
     "connectionId":"FCaHGcVDliACGeQ=",
     "offers":[
       "02a69a39-15bc-47e7-ad3a-e9dcd7e153a1"
@@ -35,7 +35,7 @@ Calls and messages:
       },
       "created":1630445560003,
       "expired":1630531960003,
-      "token":"xxxxxxxx-da8c-48a9-a28f-xxxxxxxxxxxx",
+      "token":HASHED_TOKEN,
       "connectionId":"FCaEXf9eliACHmg=",
       "bids":[
         "e7302adb-835e-422a-a6fe-c6a4ecbd7ec7"
@@ -80,12 +80,19 @@ Calls and messages:
       },
       "created":1630584749157,  // timestamp with milliseconds
       "expired":1630671149157,  // `created` + some offset (24h in ref. UI)
-      "token":"",         // always empty for inbound offers
+      "token":HASHED_TOKEN,
       "connectionId":"",  // empty empty if offer's owner is currently offline
       "bids":[            // ids of offers advised by their owners as matched ones
         "69ed6afc-734d-4b27-a4c8-875dd8458da9",
         ...
       ],
+      "xbids"[            // tokens of bidders
+        {
+          "token":TOKEN,
+          "tokenhash":HASHED_TOKEN,
+          "accepted":true|false
+        }, ...
+      ]
       "items":[
         { "sname":"",     // supply item name only codes are meaningfull actually so name is empty
           "sstock":0,     // supply stock - can have current stock if available
@@ -124,9 +131,8 @@ Calls and messages:
         "nickname":"Cptn-trio",
         "location":"The Bubble"
       },
-      "bids":[
-        "e7302adb-835e-422a-a6fe-c6a4ecbd7ec7"
-      ],
+      "bids":[...],
+      "xbids":[...],
       "items":[
         { "tradeid":0,
           "sid":"material.good.gmeds",
@@ -158,9 +164,8 @@ Calls and messages:
       "nickname":"Cptn-trio",
       "location":"The Bubble"
     },
-    "bids":[
-      "e7302adb-835e-422a-a6fe-c6a4ecbd7ec7"
-    ],
+    "bids":[...],
+    "xbids":[...],
     "items":[
       { "tradeid":0,
         "sid":"material.good.gmeds",
@@ -213,7 +218,6 @@ Calls and messages:
   "data":{
     "method":"bidpush",
     "payload":{
-      "token":"47afd5c8-da8c-48a9-a28f-392eacb1bf81",     // will be used to authorise and validate this call
       "myOfferId:"02a69a39-15bc-47e7-ad3a-e9dcd7e153a1",  // offer to add to other party offer's bids
       "offerId":"63271c30-d8cb-43b1-9530-4a51e738ce5b"    // target offer to change bids of
     }
@@ -223,7 +227,7 @@ Calls and messages:
 > Inbound Message:
 - Sent only to parties of the offer.
 - It's UI's responsibility to reflect changes as only new bids collection is provided by the backend.
-- Reference UI just looks into local offers collection and shows appropriate actions for offers with or without handshare (both sides have bids on each other)
+- Reference UI just looks into local offers collection and shows appropriate actions for offers with or without handshake (both sides have bids on each other)
 
 {
   "code":"bidpush",
@@ -248,7 +252,6 @@ Calls and messages:
   "data":{
     "method":"bidpull",
     "payload":{
-      "token":"47afd5c8-da8c-48a9-a28f-392eacb1bf81",     // will be used to authorise and validate this call
       "myOfferId:"02a69a39-15bc-47e7-ad3a-e9dcd7e153a1",  // offer to remove from other party offer's bids
       "offerId":"63271c30-d8cb-43b1-9530-4a51e738ce5b"    // target offer to change bids of
     }
@@ -256,7 +259,7 @@ Calls and messages:
 }
 
 > Inbound Message:
-- Sent only to parties of the offer (see `4. BIDPUSH` for details)
+- Sent only to parties of the offer (see `5. BIDPUSH` for details)
 
 {
   "code":"bidpull",
@@ -279,7 +282,6 @@ Calls and messages:
   "data":{
     "method":"message",
     "payload":{
-      "token":"47afd5c8-da8c-48a9-a28f-392eacb1bf81", // token will be used to authorise this call
       "message":{
         "myOfferId:"02a69a39-15bc-47e7-ad3a-e9dcd7e153a1", // offer to show the message on on the recepient's side (sender's offer)
         "offerId":"63271c30-d8cb-43b1-9530-4a51e738ce5b", // target offer (receiver's offer)
@@ -328,3 +330,139 @@ Calls and messages:
   ]
 }
 
+# 9. XBIDPUSH - push an implicit bid to other player's offer
+
+> Outbound Call:
+
+{
+  "action":"comms",
+  "data":{
+    "method":"xbidpush",
+    "payload":{
+      "offerId":"63271c30-d8cb-43b1-9530-4a51e738ce5b"    // target offer to change xbids of
+    }
+  }
+}
+
+> Inbound Message:
+- Sent only to parties of the offer.
+- It's UI's responsibility to reflect changes as only new xbids collection is provided by the backend.
+- Reference UI just looks into local offers collection and shows appropriate actions for offers with or without xbids
+
+{
+  "code":"xbidpush",
+  "offer":{ // full data of an offer being sent but only `xbids` are actually important
+    "offerId":"02a69a39-15bc-47e7-ad3a-e9dcd7e153a1",
+    ...
+    "xbids":[ // most recent xbids collection for the offer
+      {
+        "token":"",                 // always empty in server responce
+        "tokenhash": HASHED_TOKEN,  // hashed token of a bidder
+        "accepted":true|false       // always `false` for new xbid
+      }, ...
+    ],
+    ...
+  }
+}
+
+# 10. XBIDPULL - pull (recall) your xbid from other player's offer
+
+> Outbound Call:
+
+{
+  "action":"comms",
+  "data":{
+    "method":"xbidpull",
+    "payload":{
+      "offerId":"63271c30-d8cb-43b1-9530-4a51e738ce5b"    // target offer to change xbids of
+    }
+  }
+}
+
+> Inbound Message:
+- Sent only to parties of the offer (see `9. XBIDPUSH` for details)
+
+{
+  "code":"xbidpull",
+  "offer":{ // full data of an offer being sent but only `xbids` are actually important
+    ...
+    "xbids":[   // most recent bids collection for the offer
+      ...       // same structure as in `9. XBIDPUSH`
+    ],
+    ...
+  }
+}
+
+# 11. XBIDACCEPT - accept (decline) an xbid
+
+> Outbound Call:
+
+{
+  "action":"comms",
+  "data":{
+    "method":"xbidaccept",
+    "payload":{
+      "offerId":"63271c30-d8cb-43b1-9530-4a51e738ce5b",     // target offer to change xbids of
+      "tokenhash":HASHED_TOKEN,                             // hashed token of a xbid owner
+      "accept":true|false                                   // `true` to accept, `false` to decline
+    }
+  }
+}
+
+> Inbound Message:
+- Sent only to parties of the offer (see `9. XBIDPUSH` for details)
+
+{
+  "code":"xbidaccept",
+  "offer":{ // full data of an offer being sent but only `xbids` are actually important
+    ...
+    "xbids":[   // most recent bids collection for the offer
+      ...       // same structure as in `9. XBIDPUSH`
+    ],
+    ...
+  }
+}
+
+> Inbound Message:
+- Sent to all connected users to let UI hide/show offers with xbids being accepted/declined
+
+{
+  "code":"acceptedoffers|declinedoffers",
+  "offerIds":[
+    "02a69a39-15bc-47e7-ad3a-e9dcd7e153a1"
+  ]
+}
+
+# 12. XMESSAGE - send a chat message to an offer's owner
+
+> Outbound Call:
+
+{
+  "action":"comms",
+  "data":{
+    "method":"xmessage",
+    "payload":{
+      "message":{
+        "tokenhash:HASHED_TOKEN,                          // receiver's token hash, not required if sent to offer owner
+        "offerId":"63271c30-d8cb-43b1-9530-4a51e738ce5b", // message context offer
+        "text":"hey",
+        "date":1630595348931
+      }
+    }
+  }
+}
+
+> Inbound Message:
+- Sent only to a receiver of the message (specified in `message.tokenhash` of the outbound call)
+- `message.tokenhash` can be safely omitted if a message is composed for an offer owner (`message.offerId` used to
+identify the receiver)
+
+{
+  "code":"xmessage",
+  "message":{
+    "tokenhash":HASHED_TOKEN,                         // sender's token hash
+    "offerId":"02a69a39-15bc-47e7-ad3a-e9dcd7e153a1", // offer to show the message on on my side (sender's offer)
+    "text":"Th",
+    "date":1630595362369 // date set by the other partie upon message sent (not a server date, but a client one)
+  }
+}
