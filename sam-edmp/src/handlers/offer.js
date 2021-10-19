@@ -33,7 +33,7 @@ exports.offer = async event => {
                 // 1. store new/updated offer data
                 const offer = await publishOffer(connection, eventBody.data.payload);
                 // 2. broadcast this offer to all connected users
-                await broadcastOffer(apigwManagementApi, connection.token, offer);
+                await broadcastOffer(apigwManagementApi, offer);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             }
             case shared.OFFER_METHOD_GET: {
@@ -77,14 +77,14 @@ async function postEnlistResponce(apigwManagementApi, trace) {
     const payload = {
         code: shared.OFFER_METHOD_ENLIST,
         trace,
-        offers: offers.map(offer => Object.assign(offer, { token: utils.sha256(trace.token) }))
+        offers: offers.map(offer => shared.hashToken(offer))
     };
     await apigwManagementApi.postToConnection({ ConnectionId: trace.connectionId, Data: JSON.stringify(payload) }).promise();
     return offers;
 }
 
 async function broadcastOfferWentOnline(apigwManagementApi, trace) {
-    await shared.broadcastOffersOnline(apigwManagementApi, trace.offers, trace.connectionId);
+    await shared.broadcastOffersOnline(apigwManagementApi, trace.offers, trace.connectionId, true);
 }
 
 async function postAllOffersToConnection(apigwManagementApi, connectionId) {
@@ -110,13 +110,13 @@ async function postAllOffersToConnection(apigwManagementApi, connectionId) {
     return offers;
 }
 
-async function broadcastOffer(apigwManagementApi, token, offer) {
+async function broadcastOffer(apigwManagementApi, offer) {
     const connections = await shared.getConnections();
     await shared.broadcastPostCalls(connections.Items.map(async ({ connectionId }) => {
         try {
             const payload = {
                 code: shared.OFFER_METHOD_PUBLISH,
-                offer: Object.assign(offer, { token: utils.sha256(token)})
+                offer: shared.hashToken(offer)
             };
             await shared.postToConnection(apigwManagementApi, connectionId, payload);
         } catch (e) {

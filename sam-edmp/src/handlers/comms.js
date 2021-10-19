@@ -34,6 +34,10 @@ exports.comms = async event => {
                     eventBody.data.payload.offerId,
                     eventBody.data.payload.myOfferId, false);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
+            case shared.COMMS_METHOD_MESSAGE:
+                await forwardMessage(apigwManagementApi, connectionid,
+                    eventBody.data.payload.token, eventBody.data.payload.message);
+                return { statusCode: 200, body: JSON.stringify({ connectionid })};
             case shared.COMMS_METHOD_XBIDPUSH:
                 await addOrRemoveXBid(apigwManagementApi, connectionid,
                     eventBody.data.payload.token,
@@ -44,16 +48,17 @@ exports.comms = async event => {
                     eventBody.data.payload.token,
                     eventBody.data.payload.offerId, false);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
-            case shared.COMMS_METHOD_BIDACCEPT:
-                await acceptXBid (apigwManagementApi, connectionid,
+            case shared.COMMS_METHOD_XBIDACCEPT:
+                await acceptOrDeclineXBid (apigwManagementApi, connectionid,
                     eventBody.data.payload.token, // own token
                     eventBody.data.payload.offerId, // offer bein processed
                     eventBody.data.payload.tokenhash, // hashed token of the other party to accept/decline
                     eventBody.data.payload.accept); // true/false for accept/decline
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
-            case shared.COMMS_METHOD_MESSAGE:
-                await forwardMessage(apigwManagementApi, connectionid,
-                    eventBody.data.payload.token, eventBody.data.payload.message);
+            case shared.COMMS_METHOD_XMESSAGE:
+                await forwardXMessage(apigwManagementApi,
+                    eventBody.data.payload.token,
+                    eventBody.data.payload.message);
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             default:
                 return { statusCode: 500, body: eventBody.data.method + ' method not supported' };
@@ -156,12 +161,12 @@ async function addOrRemoveBid (apigwManagementApi, connectionId, token, offerId,
         return false;
     }
 
-
     return true;
 }
 
+/* Support for implicit bids (bid with bidder token instead of bidder offer) */
+
 async function addOrRemoveXBid (apigwManagementApi, connectionId, token, offerId, addMode) {
-    const trace = await shared.getTrace(token);
 
     try {
 
@@ -200,18 +205,17 @@ async function addOrRemoveXBid (apigwManagementApi, connectionId, token, offerId
         return false;
     }
 
-
     return true;
 }
 
-async function acceptXBid (apigwManagementApi, connectionId, token, offerId, tokenhash, accept) {
+async function acceptOrDeclineXBid (apigwManagementApi, connectionId, token, offerId, tokenhash, accept) {
     try {
 
         const offer = await shared.getOffer(offerId);
 
         if (!offer)
             throw new Error('no my offer');
-        
+
         if (offer.token !== token)
             throw new Error('offer ownership required');
 
@@ -229,18 +233,96 @@ async function acceptXBid (apigwManagementApi, connectionId, token, offerId, tok
             throw new Error('no xbid to accept');
         }
         await shared.putOffer(offer);
-        const code = shared.COMMS_METHOD_BIDACCEPT;
-        const payload = { code , offer: shared.hashToken(offer) };
+        const code = shared.COMMS_METHOD_XBIDACCEPT;
+        const payload = { code, offer: shared.hashToken(offer) };
         // both sides should be notified about bid being accepted/declined
         await Promise.all([
             shared.postToConnection(apigwManagementApi, connectionId, payload),
             shared.postToConnection(apigwManagementApi, notifyTrace ? notifyTrace.connectionId : "", payload)
         ]);
+        await shared.broadcastOffersAccepted(apigwManagementApi, [offerId], accept);
     } catch (e) {
         console.log('acceptXBid failed: ' + e.message);
         return false;
     }
 
+    return true;
+}
+
+/*
+    token - non-hashed token of the message sender
+    message - {
+        tokenhash - hashed token of a party being communicated (required if 
+                    a message is being sent to a bidder),
+        offerId - id of an offer in scope of current negotiation,
+        date - timestamp of the message from the client,
+        text - message text
+    }
+
+    will forward the `message` object by setting a `tokenhash` field
+    to sender's hashed token value to let the receiver know the sender
+*/
+async function forwardXMessage (apigwManagementApi, token, message) {
+
+    try {
+
+        const offer = await shared.getOffer(message.offerId);
+
+        if (!offer)
+            throw new Error('no offer in context of the negotiation');
+
+        if (offer.connectionId.length === 0)
+            throw new Error('only online allowed');
+
+        if (!offer.xbids || offer.xbids === undefined || offer.xbids.length === 0)
+            throw new Error('no xbids on their offer yet');
+
+        console.log('message: offer xbids: '+JSON.stringify(offer.xbids));
+
+        // check if the offer is mine
+        const isMyOffer = offer.token === token;
+
+        const idx1 = offer.xbids.findIndex(b => isMyOffer ?
+            b.tokenhash === message.tokenhash :
+            b.token === token);
+
+        if (idx1 < 0)
+            throw new Error('no their xbid for my offer');
+
+        const xbid = offer.xbids[idx1];
+
+        if (!xbid.accepted)
+            throw new Error('xbid is not yet accepted');
+
+        /* xbid accepted, can forward chat message: */
+
+        const code = shared.COMMS_METHOD_XMESSAGE;
+        const payload = {
+            code,
+            message: Object.assign(message, { tokenhash: utils.sha256(token) })
+        };
+        console.log('forwardMessage: ' + JSON.stringify(payload));
+
+        if (isMyOffer) { // find bidder's trace and send a message if trace is online
+            const bidder = shared.getTrace(xbid.token);
+            if (!bidder)
+                throw new Error('xbid from unknown trace, stale data');
+
+            if (!bidder.connectionId || bidder.connectionId.length === 0)
+                throw new Error('xbid owner is offline');
+
+            await shared.postToConnection(apigwManagementApi, bidder.connectionId, payload);
+
+        } else { // send a message to an offer's current connection
+
+            await shared.postToConnection(apigwManagementApi, offer.connectionId, payload);
+
+        }
+
+    } catch (e) {
+        console.log('forwardMessage failed: ' + e.message);
+        return false;
+    }
 
     return true;
 }

@@ -9,14 +9,18 @@ exports.OFFER_METHOD_GET = "getoffers";
 exports.OFFER_METHOD_REMOVE = "dropoffers";
 exports.OFFER_EVENT_ONLINE = "onlineoffers";
 exports.OFFER_EVENT_OFFLINE = "offlineoffers";
+exports.OFFER_EVENT_ACCEPTED = "acceptedoffers";
+exports.OFFER_EVENT_DECLINED = "declinedoffers";
 
 exports.COMMS_METHOD_BIDPUSH = "bidpush"; // to push a bid using an offer id
 exports.COMMS_METHOD_BIDPULL = "bidpull"; // to revoke a bid using an offer id
-exports.COMMS_METHOD_BIDACCEPT = "bidaccept";
+exports.COMMS_METHOD_BIDACCEPT = "bidaccept"; // not used
 exports.COMMS_METHOD_MESSAGE = "message";
 
 exports.COMMS_METHOD_XBIDPUSH = "xbidpush"; // to push a bid using a token
 exports.COMMS_METHOD_XBIDPULL = "xbidpull"; // to revoke a bid using a token
+exports.COMMS_METHOD_XBIDACCEPT = "xbidaccept";
+exports.COMMS_METHOD_XMESSAGE = "xmessage";
 
 
 /** utilities */
@@ -92,10 +96,12 @@ exports.putTrace = async (trace) => {
 };
 
 exports.hashToken = async (offer) => {
-    offer.token = utils.sha256(offer.token);
-    offer.xbids = (offer.xbids === undefined || !offer.xbids) ?
+    var _offer = Object.assign({}, offer);
+    _offer.token = utils.sha256(_offer.token);
+    _offer.xbids = (_offer.xbids === undefined || !_offer.xbids) ?
         [] :
-        offer.xbids.map(xbid => xbid.token = "");
+        _offer.xbids.map(xbid => xbid.token = "");
+    return _offer;
 };
 
 exports.getOffer = async (offerId) => {
@@ -135,7 +141,7 @@ exports.getValidPublicOffers = async () => {
             var today = new Date().getTime();
             var offers = result.Items.filter(c => c.expired >= today);
             // remove non-public data:
-            offers = offers.map(offer => Object.assign(offer, { token: utils.sha256(offer.token) }));
+            offers = offers.map(offer => this.hashToken(offer));
             return offers;
         }
     } catch (e) {
@@ -210,11 +216,25 @@ exports.broadcastOffersDelete = async (apigwManagementApi, offerIds) => {
     }));
 };
 
-exports.broadcastOffersOffline = async (apigwManagementApi, offerIds) => {
+exports.broadcastOffersOnline = async (apigwManagementApi, offerIds, ownerConnectionId, online) => {
     const connections = await this.getConnections();
     await this.broadcastPostCalls(connections.Items.map(async ({ connectionId }) => {
         const payload = {
-            code: this.OFFER_EVENT_OFFLINE,
+            code: online ? this.OFFER_EVENT_ONLINE : this.OFFER_EVENT_OFFLINE,
+            offerIds, connectionId: ownerConnectionId};
+        try {
+            await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) }).promise();
+        } catch (e) {
+            //skip exception
+        }
+    }));
+};
+
+exports.broadcastOffersAccepted = async (apigwManagementApi, offerIds, accepted) => {
+    const connections = await this.getConnections();
+    await this.broadcastPostCalls(connections.Items.map(async ({ connectionId }) => {
+        const payload = {
+            code: accepted ? this.OFFER_EVENT_ACCEPTED : this.OFFER_EVENT_DECLINED,
             offerIds };
         try {
             await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) }).promise();
@@ -224,19 +244,6 @@ exports.broadcastOffersOffline = async (apigwManagementApi, offerIds) => {
     }));
 };
 
-exports.broadcastOffersOnline = async (apigwManagementApi, offerIds, ownerConnectionId) => {
-    const connections = await this.getConnections();
-    await this.broadcastPostCalls(connections.Items.map(async ({ connectionId }) => {
-        const payload = {
-            code: this.OFFER_EVENT_ONLINE,
-            offerIds, connectionId: ownerConnectionId};
-        try {
-            await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) }).promise();
-        } catch (e) {
-            //skip exception
-        }
-    }));
-};
 
 exports.setOffersConnectionId = async (offers, connectionId) => {
     try {
@@ -295,7 +302,7 @@ exports.offline = async (apigwManagementApi, connectionId, notify) => {
         await this.setOffersConnectionId(offers, trace.connectionId);
         await ddb.delete({ TableName: process.env.CONN_TABLE_NAME, Key: { connectionId } }).promise();
         if (notify) {
-            await this.broadcastOffersOffline(apigwManagementApi, trace.offers);
+            await this.broadcastOffersOnline(apigwManagementApi, trace.offers, "", false);
         }
     } catch (e) {
         console.log('offline failed: ' + JSON.stringify(e));
