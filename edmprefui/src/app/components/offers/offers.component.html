@@ -16,7 +16,10 @@
     </div>
     <div class="offer alt-rows" *ngFor="let offer of filteredOffers">
         <input #bidstage type="hidden" [value]="getBidStage(offer)"/>
-        <div class="offer-header">
+        <input #xbidstage type="hidden" [value]="getXBidStage(offer)"/>
+        <div
+            *ngIf="offer.info !== undefined && offer.connectionId !== undefined"
+            class="offer-header">
             <div class="left-offer-info">
                 <button mat-button
                     title="{{t('Copy nickname to clipboard')}}" cdkCopyToClipboard="{{offer.info.nickname}}">{{offer.info.nickname}}</button>|
@@ -30,6 +33,22 @@
                 <button mat-button title="{{t('Bid on Offer')}}" color="accent"
                     *ngIf="bidstage.value === 'bid'"
                     (click)="bidpush(offer)">{{t('Push Bid')}}</button>
+                <button mat-button title="{{t('X-Bid on Offer')}}" color="accent"
+                    *ngIf="xbidstage.value === 'xbid'"
+                    (click)="xbidpush(offer)">{{t('Push X-Bid')}}</button>
+                <button mat-button title="{{t('Recall X-Bid from Offer')}}"
+                    *ngIf="xbidstage.value === 'xwait' || xbidstage.value === 'xmessage'" color="warn"
+                    (click)="xbidpull(offer)">{{t('Pull X-Bid')}}</button>
+                <button mat-button title="{{t('Accept Inbound X-Bid')}}" color="accent"
+                    *ngIf="xbidstage.value === 'xaccept'"
+                    (click)="xbidaccept(offer, true)">{{t('Accept X-Bid')}}</button>
+                <button mat-button title="{{t('Decline Inbound X-Bid')}}" color="accent"
+                    *ngIf="xbidstage.value === 'xdecline'"
+                    (click)="xbidaccept(offer, false)">{{t('Decline X-Bid')}}</button>
+                <button mat-button title="{{t('Send X-Message')}}"
+                    color="{{ offer.connectionId.length ? 'accent' : '' }}"
+                    *ngIf="xbidstage.value === 'xmessage' || xbidstage.value === 'xdecline'"
+                    (click)="openXChatDialog(offer)">{{t('X-Chat')}}</button>
                 <button mat-button title="{{t('Accept Inbound Bid')}}" color="accent"
                     *ngIf="bidstage.value === 'accept'"
                     (click)="bidpush(offer)">{{t('Accept Bid')}}</button>

@@ -77,7 +77,8 @@ async function postEnlistResponce(apigwManagementApi, trace) {
     const payload = {
         code: shared.OFFER_METHOD_ENLIST,
         trace,
-        offers: offers.map(offer => shared.hashToken(offer))
+        tokenHash: utils.sha256(trace.token),
+        offers: offers.map(shared.hashToken)
     };
     await apigwManagementApi.postToConnection({ ConnectionId: trace.connectionId, Data: JSON.stringify(payload) }).promise();
     return offers;

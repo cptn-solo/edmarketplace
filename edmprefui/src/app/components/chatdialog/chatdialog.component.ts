@@ -89,6 +89,7 @@ export class ChatdialogComponent implements OnInit, OnDestroy, AfterViewChecked 
     var message = {
       myOfferId: this.myOfferId,
       offerId: this.offer.offerId,
+      tokenhash: '',
       text: this.message.substring(0, 200),
       inbound: true,
       date: new Date().getTime()

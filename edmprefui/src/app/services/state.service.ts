@@ -4,10 +4,12 @@ import { ChatMessage } from '../datamodels/chatmessage';
 import { TradeItem } from '../datamodels/tradeitem';
 import { UserInfo, DEFAULT_USER_INFO, Offer } from '../datamodels/userinfo';
 import { StorageService } from './storage.service';
+import { environment } from '../../environments/environment';
 
 const USER_INFO_KEY = 'USER_INFO';
 const OFFERS_KEY = 'OFFERS';
 const TOKEN_KEY = 'TRACE_TOKEN';
+const TOKEN_HASH_KEY = 'TRACE_TOKEN_HASH';
 const CONNECTION_KEY = 'CONNECTION_KEY';
 const PANELS_KEY = 'PANELS'; // offers view expandable panels state
 const CHATMESSAGES_KEY = 'CHAT';
@@ -21,6 +23,7 @@ export class StateService {
   private _userInfo$ = new BehaviorSubject<UserInfo>(DEFAULT_USER_INFO);
   private _offers$ = new BehaviorSubject<Array<Offer>>([]);
   private _traceToken$ = new BehaviorSubject<string>('');
+  private _traceTokenHash$ = new BehaviorSubject<string>('');
   private _connectionId$ = new BehaviorSubject<string>('');
   private _panels$ = new BehaviorSubject<Array<string>>([]);
   private _chat$ = new BehaviorSubject<Array<ChatMessage>>([]);
@@ -31,6 +34,7 @@ export class StateService {
   public userInfo$ = this._userInfo$.asObservable();
   public offers$ = this._offers$.asObservable();
   public traceToken$ = this._traceToken$.asObservable();
+  public traceTokenHash$ = this._traceTokenHash$.asObservable();
   public connectionId$ = this._connectionId$.asObservable();
   public panels$ = this._panels$.asObservable();
   public chat$ = this._chat$.asObservable();
@@ -40,6 +44,7 @@ export class StateService {
     var userInfo = this.storage.loadInfo(USER_INFO_KEY) as unknown as UserInfo??DEFAULT_USER_INFO;
     var offers = this.storage.loadInfo(OFFERS_KEY) as unknown as Array<Offer>??[];
     var traceToken = this.storage.loadInfo(TOKEN_KEY) as unknown as string??'';
+    var traceTokenHash = this.storage.loadInfo(TOKEN_HASH_KEY) as unknown as string??'';
     var connectionId = this.storage.loadInfo(CONNECTION_KEY) as unknown as string??'';
     var panels = this.storage.loadInfo(PANELS_KEY) as unknown as Array<string>??['info'];
     var chatMessages = this.storage.loadInfo(CHATMESSAGES_KEY) as unknown as Array<ChatMessage>??[];
@@ -48,6 +53,7 @@ export class StateService {
     this._userInfo$.next(userInfo);
     this._offers$.next(offers);
     this._traceToken$.next(traceToken);
+    this._traceTokenHash$.next(traceTokenHash);
     this._connectionId$.next(connectionId);
     this._panels$.next(panels);
     this._chat$.next(chatMessages);
@@ -58,6 +64,7 @@ export class StateService {
     this.userInfo$.subscribe(val => this.storage.setInfo(val, USER_INFO_KEY));
     this.offers$.subscribe(val => this.storage.setInfo(val, OFFERS_KEY));
     this.traceToken$.subscribe(val => this.storage.setInfo(val, TOKEN_KEY));
+    this.traceTokenHash$.subscribe(val => this.storage.setInfo(val, TOKEN_HASH_KEY));
     this.connectionId$.subscribe(val => this.storage.setInfo(val, CONNECTION_KEY));
     this.panels$.subscribe(val => this.storage.setInfo(val, PANELS_KEY));
     this.chat$.subscribe(val => this.storage.setInfo(val, CHATMESSAGES_KEY));
@@ -68,8 +75,9 @@ export class StateService {
     this._locale$.next(val);
   }
 
-  registerUserTraceToken(token: string) {
+  registerUserTraceToken(token: string, tokenHash: string) {
     this._traceToken$.next(token);
+    this._traceTokenHash$.next(tokenHash);
   }
 
   registerUserConnection(connectionId: string) {
@@ -138,6 +146,7 @@ export class StateService {
     if (offer.offerId === this._userInfo$.value.offerId) {
       var userinfo = this._userInfo$.value;
       userinfo.bids = offer.bids;
+      userinfo.xbids = offer.xbids;
       this._userInfo$.next(userinfo);
       return; // skip my own offer broadcast
     }
@@ -155,6 +164,7 @@ export class StateService {
     if (userInfo.items.length === 0 && offers.length !== 0) {
       var defaultOffer = offers[0] as unknown as Offer;
       userInfo.bids = defaultOffer.bids;
+      userInfo.xbids = defaultOffer.xbids;
       userInfo.nickname = defaultOffer.info.nickname;
       userInfo.location = defaultOffer.info.location;
       userInfo.created = defaultOffer.created;

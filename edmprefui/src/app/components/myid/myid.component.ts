@@ -26,7 +26,7 @@ export class MyidComponent implements OnInit {
 
   saveId() {
     if (this.token && this.token.length > 0) {
-      this.state.registerUserTraceToken(this.token);
+      this.state.registerUserTraceToken(this.token, '');
       this.state.updateUserTradeItems([]);
       this.api.close();
       setTimeout(() => {

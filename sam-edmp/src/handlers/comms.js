@@ -194,6 +194,7 @@ async function addOrRemoveXBid (apigwManagementApi, connectionId, offerId, addMo
         const code = addMode ? shared.COMMS_METHOD_XBIDPUSH : shared.COMMS_METHOD_XBIDPULL;
         const payload = { code , offer: shared.hashToken(offer) };
         // both sides should get notified about bid being placed/removed
+        console.log('addOrRemoveXBid: '+ JSON.stringify(payload));
         await Promise.all([
             shared.postToConnection(apigwManagementApi, offer.connectionId, payload),
             shared.postToConnection(apigwManagementApi, connectionId, payload)

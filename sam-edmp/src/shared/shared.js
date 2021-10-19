@@ -95,12 +95,16 @@ exports.putTrace = async (trace) => {
     return trace;
 };
 
-exports.hashToken = async (offer) => {
-    var _offer = Object.assign({}, offer);
+exports.hashToken = (offer) => {
+    const _offer = Object.assign({}, offer);
     _offer.token = utils.sha256(_offer.token);
     _offer.xbids = (_offer.xbids === undefined || !_offer.xbids) ?
         [] :
-        _offer.xbids.map(xbid => xbid.token = "");
+        _offer.xbids.map(xbid => {
+            const _xbid = Object.assign({}, xbid);
+            _xbid.token = "";
+            return _xbid;
+        });
     return _offer;
 };
 
@@ -141,8 +145,8 @@ exports.getValidPublicOffers = async () => {
             var today = new Date().getTime();
             var offers = result.Items.filter(c => c.expired >= today);
             // remove non-public data:
-            offers = offers.map(offer => this.hashToken(offer));
-            return offers;
+            const _offers = offers.map(this.hashToken);
+            return _offers;
         }
     } catch (e) {
         console.log('getValidOffers failed: ' + JSON.stringify(e));

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { ChatMessage } from '../datamodels/chatmessage';
 import { TradeItem } from '../datamodels/tradeitem';
-import { BidStage, DEFAULT_OFFER_EXPIRED_HOURS, DEFAULT_USER_INFO, Offer, OfferChange, OfferChangeFactory, OfferChangeType, UserInfo } from '../datamodels/userinfo';
+import { BidStage, DEFAULT_OFFER_EXPIRED_HOURS, DEFAULT_USER_INFO, Offer, OfferChange, OfferChangeFactory, OfferChangeType, UserInfo, XBidStage } from '../datamodels/userinfo';
 import { EdmpwsapiService } from './edmpwsapi.service';
 import { StateService } from './state.service';
 
@@ -12,11 +12,18 @@ const OFFER_EVENT_ONLINEOFFERS = "onlineoffers";
 const OFFER_EVENT_OFFLINEOFFERS = "offlineoffers"
 const OFFER_EVENT_GET = "getoffers";
 const OFFER_EVENT_DROPOFFERS = "dropoffers";
+const OFFER_EVENT_ACCEPTED = "acceptedoffers";
+const OFFER_EVENT_DECLINED = "declinedoffers";
+
 
 const COMMS_METHOD_BIDPUSH = "bidpush";
 const COMMS_METHOD_BIDPULL = "bidpull";
 const COMMS_METHOD_MESSAGE = "message";
 
+const COMMS_METHOD_XBIDPUSH = "xbidpush";
+const COMMS_METHOD_XBIDPULL = "xbidpull";
+const COMMS_METHOD_XBIDACCEPT = "xbidaccept";
+const COMMS_METHOD_XMESSAGE = "xmessage";
 
 const uuidv4 = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -32,6 +39,7 @@ export class OfferService {
   _items$ = new BehaviorSubject<Array<TradeItem>>([]);
   _offers$ = new BehaviorSubject<Array<Offer>>([]);
   _token$ = new BehaviorSubject<string>('');
+  _tokenHash$ = new BehaviorSubject<string>('');
 
   _offerChanged$ = new BehaviorSubject<OfferChange|null>(null);
 
@@ -39,6 +47,7 @@ export class OfferService {
   items$ = this._items$.asObservable();
   offers$ = this._offers$.asObservable();
   token$ = this._token$.asObservable();
+  tokenHash$ = this._tokenHash$.asObservable();
 
   offerChanged$ = this._offerChanged$.asObservable();
 
@@ -51,6 +60,7 @@ export class OfferService {
     });
     this.state.offers$.subscribe(offers => this._offers$.next(offers));
     this.state.traceToken$.subscribe(token => this._token$.next(token));
+    this.state.traceTokenHash$.subscribe(tokenHash => this._tokenHash$.next(tokenHash));
     this.api.connected$.subscribe(val => this.connectionMonitor(val));
     this.api.messages$.subscribe(data => this.messagesMonitor(data));
   }
@@ -67,10 +77,10 @@ export class OfferService {
     try {
       var jsonData = JSON.parse(data);
       switch (jsonData.code) {
-        case OFFER_EVENT_ENLIST: { // { code: "enlist", trace, offers }
+        case OFFER_EVENT_ENLIST: { // { code: "enlist", trace, tokenHash, offers }
           // During enlist call user either gets back his sent token (saved from 1st enlist) or newly generated one
           // if this is a 1st enlist call.
-          this.state.registerUserTraceToken(jsonData.trace.token);
+          this.state.registerUserTraceToken(jsonData.trace.token, jsonData.tokenHash);
           this.state.registerUserConnection(jsonData.trace.connectionId);
           // enlisted, initial connection info (connection id)
           this.state.processUserOffer(jsonData.offers);
@@ -118,6 +128,14 @@ export class OfferService {
         case COMMS_METHOD_MESSAGE: { // { code, message }
           this.state.processInboundMessage(jsonData.message);
           this._offerChanged$.next(OfferChangeFactory([jsonData.message.offerId], OfferChangeType.MESSAGE));
+          break;
+        }
+        case COMMS_METHOD_XBIDPUSH:   // { code: "xbidpush", offer }
+        case COMMS_METHOD_XBIDPULL:   // { code: "xbidpull", offer }
+        case COMMS_METHOD_XBIDACCEPT: { // { code: "xbidaccept", offer }
+            // incoming offer with new bid just added
+          this.state.processInboundOffer(jsonData.offer);
+          this._offerChanged$.next(OfferChangeFactory([jsonData.offer.offerId], jsonData.code));
           break;
         }
         default: {
@@ -220,6 +238,28 @@ export class OfferService {
     }
   }
 
+  checkOfferXBidStage(offer: Offer): XBidStage {
+    // return true if a bid already added to the specified offer
+    var retval = XBidStage.NA;
+    var xbids = offer.xbids??[];
+    const idx1 = xbids.findIndex(b => b.tokenhash === this._tokenHash$.value);
+    if (idx1 < 0) {
+      // no outgoing bids
+      retval = XBidStage.XBID;
+    } else {
+      // bid already pushed
+      const xbid = xbids[idx1];
+      retval = xbid.accepted ? XBidStage.XMESSAGE : XBidStage.XWAIT;
+    }
+    var inboundxbids = this._userinfo$.value.xbids??[];
+    var idx2 = inboundxbids.findIndex(b => b.tokenhash === offer.token);
+    if (idx2 >= 0) {
+      const inbxbid = inboundxbids[idx2];
+      retval = inbxbid.accepted ? XBidStage.XDECLINE : XBidStage.XACCEPT;
+    }
+    return retval;
+  }
+
   /** sync with server */
 
   enlistUser() {
@@ -317,4 +357,28 @@ export class OfferService {
     return this.state.addOtboundMessage(message);
   }
 
+  /* X-Bids */
+  xbidPushOrPull(offerId: string, pushMode: boolean) {
+    const token = this._token$.value;
+    this.api.sendMessage(
+      { "action": "comms",
+        "data": {
+          "method": pushMode ? COMMS_METHOD_XBIDPUSH : COMMS_METHOD_XBIDPULL,
+          "payload": { offerId }
+        }
+      }
+    );
+  }
+
+  xbidAcceptOrDecline(offerId: string, tokenhash: string,  accept: boolean) {
+    const token = this._token$.value;
+    this.api.sendMessage(
+      { "action": "comms",
+        "data": {
+          "method": COMMS_METHOD_XBIDACCEPT,
+          "payload": { offerId, tokenhash, accept }
+        }
+      }
+    );
+  }
 }

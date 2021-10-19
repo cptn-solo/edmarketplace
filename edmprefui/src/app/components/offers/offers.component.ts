@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Subject } from 'rxjs/internal/Subject';
 import { takeUntil } from 'rxjs/operators';
 import { TradeItem } from 'src/app/datamodels/tradeitem';
-import { BidStage, DEFAULT_USER_INFO, Offer, OfferChangeType, UserInfo } from 'src/app/datamodels/userinfo';
+import { BidStage, DEFAULT_USER_INFO, Offer, OfferChangeType, UserInfo, XBidStage } from 'src/app/datamodels/userinfo';
 import { EdmpwsapiService } from 'src/app/services/edmpwsapi.service';
 import { OfferService } from 'src/app/services/offer.service';
 import { ChatdialogComponent } from '../chatdialog/chatdialog.component';
@@ -98,6 +98,37 @@ export class OffersComponent implements OnInit, OnDestroy {
     this.offers.bidPushOrPull(offer.offerId, myOfferId, false);
   }
 
+  xbidpush(offer: Offer) {
+    this.offers.xbidPushOrPull(offer.offerId, true);
+  }
+
+  xbidpull(offer: Offer) {
+    this.offers.xbidPushOrPull(offer.offerId, false);
+  }
+
+  xbidaccept(offer: Offer, accept: boolean) {
+    this.offers.xbidAcceptOrDecline(this.userInfo.offerId, offer.token, accept);
+  }
+
+  openXChatDialog(offer: Offer) {
+    this.chatOfferId = offer.offerId;
+    const dialogRef = this.dialog.open(ChatdialogComponent,
+      {
+        width: '520px',
+        height: '520px',
+        data: { offer }
+      });
+
+    dialogRef.afterClosed().subscribe(result => {
+      this.chatOfferId = '';
+      console.log(`Dialog result: ${result}`);
+    });
+
+    const unreadIdx = this.unreadOfferChats.indexOf(offer.offerId);
+    if (unreadIdx >= 0)
+      this.unreadOfferChats.splice(unreadIdx, 1);
+  }
+
   openChatDialog(offer: Offer) {
     // TODO: let user pick his offer for bid
     const myOfferId = this.userInfo.offerId
@@ -127,6 +158,10 @@ export class OffersComponent implements OnInit, OnDestroy {
 
   getBidStage(offer: Offer): BidStage {
     return this.offers.checkOfferBidStage(offer);
+  }
+
+  getXBidStage(offer: Offer): XBidStage {
+    return this.offers.checkOfferXBidStage(offer);
   }
 
   getoffers() {
