@@ -111,12 +111,31 @@ export class OffersComponent implements OnInit, OnDestroy {
   }
 
   openXChatDialog(offer: Offer) {
+    const myOfferId = this.userInfo.offerId
+
+    const offerXBids = offer.xbids;
+    const myIdx = offerXBids.findIndex(b => b.tokenhash === this.offers._tokenHash$.value);
+
+    const inboundXBids = this.userInfo.xbids;
+    const inbIdx = inboundXBids.findIndex(b => b.tokenhash === offer.token); //offer.token is hashed
+
+    var receiverTokenHash = '';
+    var contextOfferId = '';
+    if (myIdx >= 0) { // i am a xbidder for the offer
+      receiverTokenHash = offer.token;
+      contextOfferId = offer.offerId;
+    } else if (inbIdx >= 0) { // xbid from the owner of the offer exists for my own offer
+      receiverTokenHash = inboundXBids[inbIdx].tokenhash;
+      contextOfferId = myOfferId;
+    }
+    var senderTokenHash = this.offers._tokenHash$.value;
+
     this.chatOfferId = offer.offerId;
     const dialogRef = this.dialog.open(ChatdialogComponent,
       {
         width: '520px',
         height: '520px',
-        data: { offer }
+        data: { offer, myOfferId, contextOfferId, receiverTokenHash, senderTokenHash }
       });
 
     dialogRef.afterClosed().subscribe(result => {

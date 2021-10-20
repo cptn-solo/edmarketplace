@@ -8,7 +8,10 @@ export enum OfferChangeType {
     BIDPULL = 'bidpull',
     ONLINE = 'online',
     OFFLINE = 'offline',
-    MESSAGE = 'message'
+    MESSAGE = 'message',
+    XBIDPUSH = 'xbidpush',
+    XBIDPULL = 'xbidpull',
+    XBIDACCEPT = 'xbidaccept',
 }
 
 export enum BidStage {

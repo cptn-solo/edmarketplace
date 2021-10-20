@@ -309,7 +309,7 @@ async function forwardXMessage (apigwManagementApi, connectionId, message) {
         console.log('forwardMessage: ' + JSON.stringify(payload));
 
         if (isMyOffer) { // find bidder's trace and send a message if trace is online
-            const bidder = shared.getTrace(xbid.token);
+            const bidder = await shared.getTrace(xbid.token);
             if (!bidder)
                 throw new Error('xbid from unknown trace, stale data');
 

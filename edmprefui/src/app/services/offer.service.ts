@@ -119,23 +119,20 @@ export class OfferService {
           break;
         }
         case COMMS_METHOD_BIDPUSH:   // { code: "bidpush", offer }
-        case COMMS_METHOD_BIDPULL: { // { code: "bidpull", offer }
-            // incoming offer with new bid just added
-          this.state.processInboundOffer(jsonData.offer);
-          this._offerChanged$.next(OfferChangeFactory([jsonData.offer.offerId], jsonData.code));
-          break;
-        }
-        case COMMS_METHOD_MESSAGE: { // { code, message }
-          this.state.processInboundMessage(jsonData.message);
-          this._offerChanged$.next(OfferChangeFactory([jsonData.message.offerId], OfferChangeType.MESSAGE));
-          break;
-        }
+        case COMMS_METHOD_BIDPULL: // { code: "bidpull", offer }
         case COMMS_METHOD_XBIDPUSH:   // { code: "xbidpush", offer }
         case COMMS_METHOD_XBIDPULL:   // { code: "xbidpull", offer }
         case COMMS_METHOD_XBIDACCEPT: { // { code: "xbidaccept", offer }
-            // incoming offer with new bid just added
+          // incoming offer with new bid/xbid just added or xbid accepted state changed
           this.state.processInboundOffer(jsonData.offer);
           this._offerChanged$.next(OfferChangeFactory([jsonData.offer.offerId], jsonData.code));
+          break;
+        }
+        case COMMS_METHOD_MESSAGE:
+        case COMMS_METHOD_XMESSAGE:
+          { // { code, message }
+          this.state.processInboundMessage(jsonData.message);
+          this._offerChanged$.next(OfferChangeFactory([jsonData.message.offerId], OfferChangeType.MESSAGE));
           break;
         }
         default: {
@@ -380,5 +377,18 @@ export class OfferService {
         }
       }
     );
+  }
+
+  sendXChatMessage(message: ChatMessage): ChatMessage {
+    const token = this._token$.value;
+    this.api.sendMessage(
+      { "action": "comms",
+        "data": {
+          "method": COMMS_METHOD_XMESSAGE,
+          "payload": { message }
+        }
+      }
+    );
+    return this.state.addOtboundMessage(message);
   }
 }
