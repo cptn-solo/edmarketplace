@@ -178,9 +178,11 @@ async function addOrRemoveXBid (apigwManagementApi, connectionId, offerId, addMo
         }
         const idx = offer.xbids.findIndex(b => b.token === connection.token);
         if (idx < 0 && addMode) {
-            offer.xbids.push({ 
+            const timestamp = new Date().getTime();
+            offer.xbids.push({
                 token: connection.token,
                 tokenhash: utils.sha256(connection.token), // precalculate for future use
+                timestamp, // bid timestamp so we can find 1st one
                 accepted: false });
         } else if (idx >= 0 && !addMode) {
             offer.xbids.splice(idx, 1);
@@ -195,6 +197,16 @@ async function addOrRemoveXBid (apigwManagementApi, connectionId, offerId, addMo
         const payload = { code , offer: shared.hashToken(offer) };
         // both sides should get notified about bid being placed/removed
         console.log('addOrRemoveXBid: '+ JSON.stringify(payload));
+
+        const connections = await shared.getConnections();
+        await shared.broadcastPostCalls(connections.Items.map(async ({ connectionId }) => {
+            try {
+                await shared.postToConnection(apigwManagementApi, connectionId, payload);
+            } catch (e) {
+                // skip
+            }
+        }));
+
         await Promise.all([
             shared.postToConnection(apigwManagementApi, offer.connectionId, payload),
             shared.postToConnection(apigwManagementApi, connectionId, payload)
@@ -323,6 +335,11 @@ async function forwardXMessage (apigwManagementApi, connectionId, message) {
             await shared.postToConnection(apigwManagementApi, offer.connectionId, payload);
 
         }
+
+        // send a message back to sender to assure the message was sent to a receiver
+        // and for client to be able to log the message as it may need to
+        await shared.postToConnection(apigwManagementApi, connectionId, payload);
+
 
     } catch (e) {
         console.log('forwardMessage failed: ' + e.message);

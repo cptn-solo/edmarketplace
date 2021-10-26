@@ -346,7 +346,7 @@ Calls and messages:
 }
 
 > Inbound Message:
-- Sent only to parties of the offer.
+- Sent to all connected users to let UI hide/show offers with xbids being
 - It's UI's responsibility to reflect changes as only new xbids collection is provided by the backend.
 - Reference UI just looks into local offers collection and shows appropriate actions for offers with or without xbids
 
@@ -359,6 +359,7 @@ Calls and messages:
       {
         "token":"",                 // always empty in server responce
         "tokenhash": HASHED_TOKEN,  // hashed token of a bidder
+        "timestamp":1630595362369,  // timestamp of an xbid
         "accepted":true|false       // always `false` for new xbid
       }, ...
     ],
@@ -381,7 +382,7 @@ Calls and messages:
 }
 
 > Inbound Message:
-- Sent only to parties of the offer (see `9. XBIDPUSH` for details)
+- Sent to all connected users to let UI hide/show offers with xbids being
 
 {
   "code":"xbidpull",
