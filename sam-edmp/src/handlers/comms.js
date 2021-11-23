@@ -208,11 +208,6 @@ async function addOrRemoveXBid (apigwManagementApi, connectionId, offerId, addMo
                 // skip
             }
         }));
-
-        await Promise.all([
-            shared.postToConnection(apigwManagementApi, offer.connectionId, payload),
-            shared.postToConnection(apigwManagementApi, connectionId, payload)
-        ]);
     } catch (e) {
         console.log('addOrRemoveBid failed: ' + e.message);
         return false;
@@ -272,7 +267,7 @@ async function acceptOrDeclineXBid (apigwManagementApi, connectionId, offerId, t
 
 /*
     message - {
-        tokenhash - hashed token of a party being communicated (required if
+        tokenhash - hashed token of a party being communicated (required if 
                     a message is being sent to a bidder),
         offerId - id of an offer in scope of current negotiation,
         date - timestamp of the message from the client,

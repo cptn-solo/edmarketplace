@@ -93,7 +93,8 @@ Calls and messages:
           "tokenhash":HASHED_TOKEN,
           "accepted":true|false
         }, ...
-      ]
+      ],
+      "state":"AVAILABLE"|"PUSHED"|"ACCEPTED",
       "items":[
         { "sname":"",     // supply item name only codes are meaningfull actually so name is empty
           "sstock":0,     // supply stock - can have current stock if available
@@ -165,6 +166,7 @@ Calls and messages:
       "nickname":"Cptn-trio",
       "location":"The Bubble"
     },
+    "state":"AVAILABLE",
     "bids":[...],
     "xbids":[...],
     "items":[

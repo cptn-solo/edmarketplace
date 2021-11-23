@@ -183,7 +183,7 @@ exports.getOffersByToken = async (token) => {
         console.log('getOfferByToken failed: ' + JSON.stringify(e));
         throw e;
     }
-}
+};
 
 exports.broadcastPostCalls = async (postCalls) => {
     try {
