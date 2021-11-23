@@ -318,6 +318,14 @@ Calls and messages:
   "offerIds":[
     "02a69a39-15bc-47e7-ad3a-e9dcd7e153a1"
   ],
+  "offers":[ // same as in `2. GETOFFERS`
+    {
+      "offerId":"02a69a39-15bc-47e7-ad3a-e9dcd7e153a1",
+      "connectionId":"FCaHGcVDliACGeQ=",
+      "token":HASHED_TOKEN,
+      ...
+    }, ...
+  ]
   "connectionId":"FCaHGcVDliACGeQ="
 }
 
@@ -328,6 +336,14 @@ Calls and messages:
   "code":"offlineoffers",
   "offerIds":[
     "02a69a39-15bc-47e7-ad3a-e9dcd7e153a1"
+  ],
+  "offers":[ // same as in `2. GETOFFERS`
+    {
+      "offerId":"02a69a39-15bc-47e7-ad3a-e9dcd7e153a1",
+      "connectionId":"",
+      "token":HASHED_TOKEN,
+      ...
+    }, ...
   ]
 }
 

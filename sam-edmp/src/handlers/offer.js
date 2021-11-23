@@ -25,7 +25,7 @@ exports.offer = async event => {
                 // 3. set offers online
                 await shared.setOffersConnectionId(offers, connectionid);
                 // 4. post notify connected users on offer went online
-                await broadcastOfferWentOnline(apigwManagementApi, trace);
+                await broadcastOfferWentOnline(apigwManagementApi, trace, offers);
                 return { statusCode: 200, body: JSON.stringify({ trace, offers })};
             }
             case shared.OFFER_METHOD_PUBLISH: {
@@ -37,7 +37,7 @@ exports.offer = async event => {
                 return { statusCode: 200, body: JSON.stringify({ connectionid })};
             }
             case shared.OFFER_METHOD_GET: {
-                const offers = await postAllOffersToConnection(apigwManagementApi, connectionid);
+                const offers = await postAllOffersToConnection(apigwManagementApi, connectionid, true);
                 return { statusCode: 200, body: JSON.stringify({ offers })};
             }
             case shared.OFFER_METHOD_REMOVE: {
@@ -84,14 +84,14 @@ async function postEnlistResponce(apigwManagementApi, trace) {
     return offers;
 }
 
-async function broadcastOfferWentOnline(apigwManagementApi, trace) {
-    await shared.broadcastOffersOnline(apigwManagementApi, trace.offers, trace.connectionId, true);
+async function broadcastOfferWentOnline(apigwManagementApi, trace, offers) {
+    await shared.broadcastOffersOnline(apigwManagementApi, trace.offers, offers, trace.connectionId, true);
 }
 
-async function postAllOffersToConnection(apigwManagementApi, connectionId) {
-    const offers = await shared.getValidPublicOffers();
+async function postAllOffersToConnection(apigwManagementApi, connectionId, onlineOnly = true) {
+    const offers = await shared.getValidPublicOffers(onlineOnly);
     var page = 0;
-    var ofpages = parseInt(offers.length / BROADCAST_BATCH_SIZE) + ((offers.length % BROADCAST_BATCH_SIZE) ? 1 : 0);
+    var ofpages = parseInt(offers.length / BROADCAST_BATCH_SIZE, 10) + ((offers.length % BROADCAST_BATCH_SIZE) ? 1 : 0);
     var postcalls = [];
     while (offers.length > 0) {
         const batch = offers.splice(0, BROADCAST_BATCH_SIZE);
@@ -131,7 +131,8 @@ async function publishOffer(connection, offer) {
         const trace = await shared.getTrace(connection.token);
         const _offer = Object.assign(offer, {
             connectionId: connection.connectionId,
-            token: trace.token
+            token: trace.token,
+            state: shared.OFFER_STATE_AVAILABLE
         });
         if (_offer.offerId === undefined || !_offer.offerId || _offer.offerId.length === 0) {
             _offer.offerId = utils.uuidv4();

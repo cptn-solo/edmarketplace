@@ -12,6 +12,10 @@ exports.OFFER_EVENT_OFFLINE = "offlineoffers";
 exports.OFFER_EVENT_ACCEPTED = "acceptedoffers";
 exports.OFFER_EVENT_DECLINED = "declinedoffers";
 
+exports.OFFER_STATE_AVAILABLE = "AVAILABLE";
+exports.OFFER_STATE_PUSHED = "PUSHED";
+exports.OFFER_STATE_ACCEPTED = "ACCEPTED";
+
 exports.COMMS_METHOD_BIDPUSH = "bidpush"; // to push a bid using an offer id
 exports.COMMS_METHOD_BIDPULL = "bidpull"; // to revoke a bid using an offer id
 exports.COMMS_METHOD_BIDACCEPT = "bidaccept"; // not used
@@ -135,7 +139,7 @@ exports.putOffer = async (offer) => {
     }
 };
 
-exports.getValidPublicOffers = async () => {
+exports.getValidPublicOffers = async (onlineOnly = true) => {
     const params = {
         TableName: process.env.OFFER_TABLE_NAME
     };
@@ -143,7 +147,10 @@ exports.getValidPublicOffers = async () => {
         var result = await ddb.scan(params).promise();
         if (result.Items) {
             var today = new Date().getTime();
-            var offers = result.Items.filter(c => c.expired >= today);
+            var offers = result.Items.filter(c => c.expired >= today &&
+                (onlineOnly ?
+                    c.connectionId !== undefined && c.connectionId !== null && c.connectionId.length > 0 :
+                    true));
             // remove non-public data:
             const _offers = offers.map(this.hashToken);
             return _offers;
@@ -190,7 +197,7 @@ exports.broadcastPostCalls = async (postCalls) => {
 exports.postToConnection = async (apigwManagementApi, connectionId, payload) => {
     try {
         if (!connectionId || connectionId === undefined || connectionId.length === 0)
-            throw new Error('no connection to post to')
+            throw new Error('no connection to post to');
         await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) }).promise();
     } catch (e) {
 
@@ -220,12 +227,12 @@ exports.broadcastOffersDelete = async (apigwManagementApi, offerIds) => {
     }));
 };
 
-exports.broadcastOffersOnline = async (apigwManagementApi, offerIds, ownerConnectionId, online) => {
+exports.broadcastOffersOnline = async (apigwManagementApi, offerIds, offers, ownerConnectionId, online) => {
     const connections = await this.getConnections();
     await this.broadcastPostCalls(connections.Items.map(async ({ connectionId }) => {
         const payload = {
             code: online ? this.OFFER_EVENT_ONLINE : this.OFFER_EVENT_OFFLINE,
-            offerIds, connectionId: ownerConnectionId};
+            offerIds, offers, connectionId: ownerConnectionId};
         try {
             await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) }).promise();
         } catch (e) {
@@ -306,7 +313,7 @@ exports.offline = async (apigwManagementApi, connectionId, notify) => {
         await this.setOffersConnectionId(offers, trace.connectionId);
         await ddb.delete({ TableName: process.env.CONN_TABLE_NAME, Key: { connectionId } }).promise();
         if (notify) {
-            await this.broadcastOffersOnline(apigwManagementApi, trace.offers, "", false);
+            await this.broadcastOffersOnline(apigwManagementApi, trace.offers, offers, "", false);
         }
     } catch (e) {
         console.log('offline failed: ' + JSON.stringify(e));

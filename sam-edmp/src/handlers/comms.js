@@ -2,8 +2,6 @@ const AWS = require('aws-sdk');
 const shared = require('../shared/shared.js');
 const utils = require('../shared/utils.js');
 
-const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: process.env.AWS_REGION });
-
 const {
     CONN_TABLE_NAME,
     TRACE_TABLE_NAME,
@@ -192,6 +190,10 @@ async function addOrRemoveXBid (apigwManagementApi, connectionId, offerId, addMo
         } else {
             throw new Error('no need to communicate');
         }
+
+        Object.assign(offer, {
+            state: addMode ? shared.OFFER_STATE_PUSHED : shared.OFFER_STATE_AVAILABLE
+        });
         await shared.putOffer(offer);
         const code = addMode ? shared.COMMS_METHOD_XBIDPUSH : shared.COMMS_METHOD_XBIDPULL;
         const payload = { code , offer: shared.hashToken(offer) };
@@ -246,6 +248,11 @@ async function acceptOrDeclineXBid (apigwManagementApi, connectionId, offerId, t
         } else {
             throw new Error('no xbid to accept');
         }
+
+        Object.assign(offer, {
+            state: accept ? shared.OFFER_STATE_ACCEPTED : shared.OFFER_STATE_AVAILABLE
+        });
+
         await shared.putOffer(offer);
         const code = shared.COMMS_METHOD_XBIDACCEPT;
         const payload = { code, offer: shared.hashToken(offer) };
@@ -265,7 +272,7 @@ async function acceptOrDeclineXBid (apigwManagementApi, connectionId, offerId, t
 
 /*
     message - {
-        tokenhash - hashed token of a party being communicated (required if 
+        tokenhash - hashed token of a party being communicated (required if
                     a message is being sent to a bidder),
         offerId - id of an offer in scope of current negotiation,
         date - timestamp of the message from the client,
