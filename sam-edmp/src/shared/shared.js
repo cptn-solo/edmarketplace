@@ -232,7 +232,9 @@ exports.broadcastOffersOnline = async (apigwManagementApi, offerIds, offers, own
     await this.broadcastPostCalls(connections.Items.map(async ({ connectionId }) => {
         const payload = {
             code: online ? this.OFFER_EVENT_ONLINE : this.OFFER_EVENT_OFFLINE,
-            offerIds, offers, connectionId: ownerConnectionId};
+            offerIds,
+            offers: offers.map(this.hashToken),
+            connectionId: ownerConnectionId};
         try {
             await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) }).promise();
         } catch (e) {
