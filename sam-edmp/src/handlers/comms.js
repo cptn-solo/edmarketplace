@@ -237,9 +237,13 @@ async function acceptOrDeclineXBid (apigwManagementApi, connectionId, offerId, t
         var notifyTrace = null;
         if (idx >= 0) {
             var xbid = offer.xbids[idx];
-            xbid.accepted = accept;
-            offer.xbids[idx] = xbid;
             notifyTrace = await shared.getTrace(xbid.token);
+            if (accept) {
+                xbid.accepted = accept;
+                offer.xbids[idx] = xbid;
+            } else {
+                offer.xbids.splice(idx, 1);
+            }
         } else {
             throw new Error('no xbid to accept');
         }
@@ -267,7 +271,7 @@ async function acceptOrDeclineXBid (apigwManagementApi, connectionId, offerId, t
 
 /*
     message - {
-        tokenhash - hashed token of a party being communicated (required if 
+        tokenhash - hashed token of a party being communicated (required if
                     a message is being sent to a bidder),
         offerId - id of an offer in scope of current negotiation,
         date - timestamp of the message from the client,
