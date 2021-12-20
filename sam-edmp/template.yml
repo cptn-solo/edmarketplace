@@ -160,7 +160,7 @@ Resources:
         KeyType: "HASH"
       BillingMode: "PAY_PER_REQUEST"
       SSESpecification:
-        SSEEnabled: True
+        SSEEnabled: False
       TableName: !Ref ConnTableName
 
   # Traces table
@@ -175,7 +175,7 @@ Resources:
         KeyType: "HASH"
       BillingMode: "PAY_PER_REQUEST"
       SSESpecification:
-        SSEEnabled: True
+        SSEEnabled: False
       TableName: !Ref TraceTableName
 
   # Offers table
@@ -190,7 +190,7 @@ Resources:
         KeyType: "HASH"
       BillingMode: "PAY_PER_REQUEST"
       SSESpecification:
-        SSEEnabled: True
+        SSEEnabled: False
       TableName: !Ref OfferTableName
 
   # Function: OnConnect
